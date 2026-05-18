@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>家庭菜園アシスタント</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#2d6a4f;--gl:#52b788;--gp:#d8f3dc;--gb:#f0faf4;
+  --amber:#e76f51;--ap:#fde8e1;
+  --blue:#1d6fa4;--bp:#dbeeff;
+  --purple:#6b3fa0;--pp:#ede7f6;
+  --red:#c0392b;--rp:#fdecea;
+  --gray:#6b7280;--glg:#f3f4f6;
+  --text:#1a1a2e;--tm:#6b7280;
+  --border:#e5e7eb;--radius:14px;--rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#f5f5f0;font-family:'Noto Sans JP',sans-serif;color:var(--text);font-size:16px;}
+.app{max-width:430px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:#fff;}
+
+/* Header */
+.header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.header-title{font-size:17px;font-weight:700;}
+.header-sub{font-size:11px;opacity:.75;margin-top:1px;}
+.header-right{display:flex;gap:10px;align-items:center;}
+.notif-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.notif-badge{position:relative;}
+.notif-badge::after{content:'2';position:absolute;top:-4px;right:-4px;background:var(--amber);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+
+/* Alert banner */
+.alert-banner{background:var(--red);color:#fff;padding:8px 16px;font-size:12px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;}
+.alert-banner.warn{background:#d97706;}
+.alert-banner.info{background:var(--blue);}
+.alert-banner.hide{display:none;}
+
+/* Nav */
+.nav{display:flex;background:#fff;border-top:1px solid var(--border);position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;background:none;border:none;cursor:pointer;color:var(--tm);font-size:10px;font-family:inherit;border-top:2px solid transparent;}
+.nav-btn.active{color:var(--green);border-top-color:var(--green);}
+.nav-btn svg{width:20px;height:20px;}
+
+/* Content */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:64px;}
+.screen{display:none;padding:14px;}
+.screen.active{display:block;}
+
+/* Cards */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.card-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card-title svg{width:15px;height:15px;flex-shrink:0;}
+
+/* Chips */
+.chip-group{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:8px 13px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s;color:var(--text);}
+.chip.selected{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;}
+.chip:active{transform:scale(.95);}
+
+/* Home */
+.greeting{background:linear-gradient(135deg,var(--green) 0%,var(--gl) 100%);color:#fff;border-radius:var(--radius);padding:16px;margin-bottom:10px;}
+.greeting h2{font-family:'Noto Serif JP',serif;font-size:18px;font-weight:600;margin-bottom:3px;}
+.greeting p{font-size:12px;opacity:.85;line-height:1.6;}
+
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.qb{background:var(--gb);border:1.5px solid var(--gp);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .1s;}
+.qb:active{transform:scale(.97);}
+.qb-icon{font-size:26px;}
+.qb-label{font-size:12px;font-weight:700;color:var(--green);}
+.qb-sub{font-size:10px;color:var(--tm);text-align:center;}
+.qb.future{background:#f9f9f9;border-color:#e0e0e0;opacity:.75;}
+.qb.future .qb-label{color:var(--tm);}
+.future-badge{font-size:9px;background:#e0e0e0;color:#666;padding:1px 5px;border-radius:6px;}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.stat-box{background:var(--glg);border-radius:var(--rsm);padding:10px 6px;text-align:center;}
+.stat-num{font-size:20px;font-weight:700;color:var(--green);line-height:1;}
+.stat-unit{font-size:10px;color:var(--tm);}
+.stat-label{font-size:10px;color:var(--tm);margin-top:2px;}
+
+/* Alert card */
+.alert-card{border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;display:flex;gap:10px;align-items:flex-start;}
+.ac-frost{background:var(--bp);border:1px solid #93c5fd;}
+.ac-heat{background:var(--ap);border:1px solid #fdba74;}
+.ac-pest{background:var(--rp);border:1px solid #fca5a5;}
+.ac-icon{font-size:22px;flex-shrink:0;}
+.ac-title{font-size:13px;font-weight:700;margin-bottom:2px;}
+.ac-body{font-size:12px;color:var(--tm);line-height:1.5;}
+
+/* GDD bars */
+.gdd-wrap{margin-bottom:8px;}
+.gdd-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+.gdd-pct{color:var(--green);font-weight:700;}
+.gdd-track{height:9px;background:var(--border);border-radius:5px;overflow:hidden;}
+.gdd-fill{height:100%;border-radius:5px;transition:width .8s ease;}
+
+/* Weather strip */
+.wx-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.wx-row::-webkit-scrollbar{display:none;}
+.wx-day{flex-shrink:0;background:var(--glg);border-radius:var(--rsm);padding:8px 6px;text-align:center;min-width:50px;}
+.wx-day.today{background:var(--gp);}
+.wx-date{font-size:10px;color:var(--tm);}
+.wx-icon{font-size:18px;margin:3px 0;}
+.wx-temp{font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.wx-tmax{color:#e53935;font-size:12px;font-weight:700;}
+.wx-tmin{color:#1e88e5;font-size:11px;}
+.wx-rain{font-size:10px;color:var(--blue);}
+
+/* Recent list */
+.recent-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.recent-item:last-child{border-bottom:none;}
+.rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.rinfo{flex:1;}
+.rname{font-size:13px;font-weight:500;}
+.rdate{font-size:11px;color:var(--tm);}
+.rval{font-size:13px;font-weight:700;color:var(--green);}
+
+/* Record form */
+.form-prog{display:flex;gap:3px;margin-bottom:14px;}
+.fp-dot{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background .3s;}
+.fp-dot.done{background:var(--gl);}
+.fp-dot.act{background:var(--green);}
+.form-sec{margin-bottom:18px;}
+.form-label{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.form-hint{font-size:11px;color:var(--tm);margin-bottom:7px;}
+.big-input{width:100%;border:1.5px solid var(--border);border-radius:var(--rsm);padding:11px 13px;font-size:16px;font-family:inherit;color:var(--text);outline:none;transition:border-color .15s;}
+.big-input:focus{border-color:var(--green);}
+.num-row{display:flex;align-items:center;gap:12px;}
+.num-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:700;}
+.num-btn:active{background:var(--gp);}
+.num-disp{flex:1;text-align:center;font-size:32px;font-weight:700;color:var(--green);}
+.req{color:var(--amber);}
+
+.submit-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:15px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;}
+.submit-btn:active{background:var(--gl);}
+.sub-btn{width:100%;border:1.5px solid var(--green);color:var(--green);background:#fff;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;}
+
+/* Success */
+.success-screen{display:none;text-align:center;padding:28px 16px;}
+.suc-icon{width:72px;height:72px;background:var(--gp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px;}
+.suc-title{font-family:'Noto Serif JP',serif;font-size:20px;font-weight:600;margin-bottom:6px;}
+.suc-sub{font-size:13px;color:var(--tm);line-height:1.7;margin-bottom:20px;}
+.suc-summary{background:var(--gb);border-radius:var(--radius);padding:12px;margin-bottom:20px;text-align:left;}
+.ss-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--gp);}
+.ss-row:last-child{border-bottom:none;}
+.ss-key{color:var(--tm);}
+.ss-val{font-weight:700;color:var(--green);}
+
+/* AI advice */
+.ai-btn-wrap{margin-bottom:12px;}
+.ai-ask-btn{width:100%;background:linear-gradient(135deg,var(--green),var(--gl));color:#fff;border:none;border-radius:var(--radius);padding:16px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.ai-ask-btn:active{opacity:.9;}
+.style-btn{flex:1;padding:7px 4px;font-size:13px;font-family:inherit;border:2px solid var(--gb);border-radius:20px;background:var(--gb);color:var(--tm);cursor:pointer;font-weight:600;transition:all .2s;}
+.style-btn.active{border-color:var(--green);background:var(--green);color:#fff;}
+/* ② Markdownレンダリング用 */
+.md-h3{font-size:14px;font-weight:700;color:var(--green);margin:12px 0 4px;border-left:3px solid var(--green);padding-left:8px;}
+.md-h2{font-size:15px;font-weight:700;color:var(--gd);margin:14px 0 6px;}
+.md-bold{font-weight:700;color:var(--gd);}
+.md-ul{margin:4px 0 8px 12px;padding:0;}
+.md-ul li{margin-bottom:3px;list-style:disc;font-size:13px;line-height:1.7;}
+.md-hr{border:none;border-top:1px solid var(--gb);margin:12px 0;}
+.ai-loading{display:none;text-align:center;padding:28px 20px;color:var(--tm);font-size:13px;}
+.ai-loading .ld-icon{font-size:32px;margin-bottom:10px;display:block;animation:ldSpin 2s linear infinite;}
+.ai-loading .ld-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gl);margin:0 3px;animation:ldBounce 1.2s ease-in-out infinite;}
+.ai-loading .ld-dots span:nth-child(2){animation-delay:.2s;}
+.ai-loading .ld-dots span:nth-child(3){animation-delay:.4s;}
+.ai-loading .ld-msg{margin-top:10px;font-size:12px;color:var(--tm);}
+@keyframes ldSpin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+@keyframes ldBounce{0%,80%,100%{transform:scaleY(1);}40%{transform:scaleY(1.8);}}
+/* ── 操作マニュアル ── */
+.manual-tab{padding:7px 14px;font-size:13px;font-family:inherit;border:2px solid var(--gb);border-radius:20px;background:var(--gb);color:var(--tm);cursor:pointer;font-weight:600;white-space:nowrap;}
+.manual-tab.active{border-color:var(--green);background:var(--green);color:#fff;}
+.manual-card{background:#fff;border:1px solid var(--gb);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.manual-section-title{font-size:15px;font-weight:700;color:var(--gd);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--lgr);}
+.manual-text{font-size:13px;line-height:1.8;color:#333;margin-bottom:12px;}
+.manual-effect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.manual-effect{background:var(--lgr);border-radius:8px;padding:10px 6px;text-align:center;}
+.me-icon{font-size:22px;margin-bottom:4px;}.me-text{font-size:11px;color:var(--gd);font-weight:600;line-height:1.4;}
+.manual-arch{display:flex;align-items:center;gap:8px;margin:12px 0;overflow-x:auto;padding:4px 0;}
+.ma-box{border-radius:8px;padding:10px 8px;text-align:center;min-width:80px;flex-shrink:0;}
+.ma-phone{background:var(--lgr);border:2px solid var(--green);}.ma-gas{background:#e3f2fd;border:2px solid #1565c0;}
+.ma-ai{background:#f3e5f5;border:2px solid #7b1fa2;}.ma-sheet{background:#fff8e1;border:2px solid #f57f17;}
+.ma-icon{font-size:20px;margin-bottom:4px;}.ma-title{font-size:11px;font-weight:700;color:var(--gd);margin-bottom:2px;}
+.ma-desc{font-size:10px;color:var(--tm);line-height:1.4;}
+.ma-arrow{font-size:13px;color:var(--tm);text-align:center;flex-shrink:0;}.ma-arrow span{font-size:9px;display:block;}
+.ma-col{display:flex;flex-direction:column;gap:4px;}
+.manual-flow-note{background:var(--lgr);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--gd);margin-top:10px;}
+.manual-feature-list{display:flex;flex-direction:column;gap:10px;}
+.mf-item{display:flex;gap:10px;align-items:flex-start;}.mf-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.mf-item>div{font-size:13px;line-height:1.7;color:#333;}
+.manual-step-list{display:flex;flex-direction:column;gap:8px;}
+.ms-item{display:flex;gap:10px;align-items:flex-start;}
+.ms-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.ms-item>div{font-size:13px;line-height:1.7;color:#333;}
+.manual-note{margin-top:10px;background:var(--lgr);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--gd);}
+.manual-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;}
+.manual-table th{background:var(--green);color:#fff;padding:7px 10px;text-align:left;}
+.manual-table td{padding:7px 10px;border-bottom:1px solid var(--gb);}
+.manual-table tr:nth-child(even) td{background:var(--lgr);}
+.manual-faq{display:flex;flex-direction:column;gap:10px;}
+.faq-item{border:1px solid var(--gb);border-radius:8px;overflow:hidden;}
+.faq-q{background:var(--lgr);padding:8px 12px;font-size:13px;font-weight:700;color:var(--gd);}
+.faq-a{padding:8px 12px;font-size:12px;line-height:1.7;color:#333;}
+/* ── AI履歴 ── */
+.ailog-item{background:#fff;border:1px solid var(--gb);border-radius:var(--rsm);padding:12px 14px;margin-bottom:10px;}
+.ailog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.ailog-date{font-size:11px;color:var(--tm);}.ailog-type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--lgr);color:var(--gd);}
+.ailog-q{font-size:12px;font-weight:700;color:var(--gd);margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--gb);}
+.ailog-body{font-size:12px;color:#333;line-height:1.7;max-height:120px;overflow:hidden;}
+.ailog-body.expanded{max-height:none;}
+.ailog-expand{font-size:11px;color:var(--green);cursor:pointer;text-align:right;margin-top:4px;}
+.ai-result{display:none;}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:var(--ap);color:var(--amber);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;margin-bottom:12px;}
+.ai-card{background:linear-gradient(135deg,#f0faf4,#e8f5e9);border:1px solid var(--gp);border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.ai-intro{font-family:'Noto Serif JP',serif;font-size:14px;line-height:1.8;margin-bottom:12px;border-bottom:1px solid var(--gp);padding-bottom:12px;}
+.crop-adv{margin-bottom:10px;}
+.crop-adv-hd{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.cdot{width:9px;height:9px;border-radius:50%;}
+.cname{font-size:13px;font-weight:700;}
+.crop-adv-body{font-size:12px;line-height:1.8;background:rgba(255,255,255,.6);border-radius:var(--rsm);padding:9px 11px;}
+.todo-list{list-style:none;}
+.todo-item{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6;}
+.todo-item:last-child{border-bottom:none;}
+.todo-num{background:var(--green);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+
+/* Photo consult */
+.photo-area{border:2px dashed var(--border);border-radius:var(--radius);padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color .2s;}
+.photo-area:hover{border-color:var(--gl);}
+.photo-area.has-photo{border-color:var(--green);background:var(--gb);}
+.photo-icon{font-size:36px;margin-bottom:8px;}
+.photo-label{font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px;}
+.photo-sub{font-size:11px;color:var(--tm);}
+.photo-preview{width:100%;height:180px;object-fit:cover;border-radius:var(--rsm);display:none;margin-bottom:10px;}
+.photo-tip{background:var(--bp);border-radius:var(--rsm);padding:10px 12px;margin-bottom:12px;}
+.photo-tip-title{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px;}
+.photo-tip li{font-size:11px;color:var(--tm);margin-left:16px;line-height:1.7;}
+.diag-result{background:var(--rp);border:1px solid #fca5a5;border-radius:var(--radius);padding:14px;display:none;}
+.diag-title{font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px;}
+.diag-body{font-size:13px;line-height:1.8;}
+.diag-action{background:#fff;border-radius:var(--rsm);padding:10px;margin-top:10px;}
+.diag-action-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;}
+
+/* History */
+.filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-chip{flex-shrink:0;padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;}
+.filter-chip.active{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;}
+.hist-item{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
+.hdot{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hinfo{flex:1;}
+.htop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;}
+.hname{font-size:13px;font-weight:700;}
+.hdate{font-size:11px;color:var(--tm);}
+.htype{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;margin-right:5px;}
+.ht-h{background:var(--gp);color:var(--green);}
+.ht-w{background:var(--bp);color:var(--blue);}
+.ht-f{background:var(--ap);color:var(--amber);}
+.ht-o{background:var(--glg);color:var(--gray);}
+.hmemo{font-size:11px;color:var(--tm);margin-top:3px;}
+.hval{font-size:13px;font-weight:700;color:var(--green);flex-shrink:0;}
+
+/* Calendar screen */
+.cal-month{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-month-btn{background:none;border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;cursor:pointer;font-size:14px;}
+.cal-month-label{font-size:15px;font-weight:700;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;}
+.cal-head{font-size:11px;text-align:center;color:var(--tm);padding:4px 0;}
+.cal-day{font-size:12px;text-align:center;padding:6px 2px;border-radius:var(--rsm);cursor:pointer;position:relative;}
+.cal-day.today{background:var(--green);color:#fff;font-weight:700;}
+.cal-day.has-record::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:5px;height:5px;background:var(--gl);border-radius:50%;}
+.cal-day.today.has-record::after{background:#fff;}
+.cal-plant{padding:10px 12px;border-radius:var(--rsm);margin-bottom:8px;display:flex;gap:10px;align-items:center;}
+.cp-tomato{background:#ffeaea;border:1px solid #fca5a5;}
+.cp-cucumber{background:#e8fff0;border:1px solid #86efac;}
+.cp-eggplant{background:#f3e8ff;border:1px solid #d8b4fe;}
+.cp-watermelon{background:#fff7e8;border:1px solid #fcd34d;}
+.cp-icon{font-size:22px;flex-shrink:0;}
+.cp-body{flex:1;}
+.cp-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.cp-dates{font-size:11px;color:var(--tm);}
+.cp-progress{font-size:11px;color:var(--green);font-weight:700;}
+
+/* Settings / LINE future */
+.future-section{background:var(--pp);border:1px solid #d8b4fe;border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.future-title{font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.future-item{font-size:12px;color:var(--tm);padding:6px 0;border-bottom:1px solid #e9d5ff;display:flex;gap:8px;align-items:flex-start;line-height:1.5;}
+.future-item:last-child{border-bottom:none;}
+.fi-icon{flex-shrink:0;width:20px;text-align:center;}
+
+/* Proto notice */
+.proto{background:var(--ap);border:1px solid var(--amber);border-radius:var(--rsm);padding:8px 12px;font-size:11px;color:var(--amber);text-align:center;margin-bottom:12px;line-height:1.5;}
+
+/* Nav scroll */
+.nav{overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex:0 0 auto;min-width:56px;}
+
+/* Crop card */
+.crop-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.crop-emoji{font-size:28px;flex-shrink:0;width:38px;text-align:center;}
+.crop-info{flex:1;min-width:0;}
+.crop-name{font-size:14px;font-weight:700;margin-bottom:3px;}
+.crop-date-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:12px;color:var(--tm);}
+.crop-days{font-size:11px;background:var(--gp);color:var(--green);padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0;}
+.crop-actions{display:flex;gap:6px;flex-shrink:0;}
+.crop-edit-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.crop-edit-btn:active{background:var(--gp);}
+.crop-del-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #fca5a5;background:var(--rp);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.crop-del-btn:active{opacity:.7;}
+
+/* Add crop btn */
+.add-crop-btn{width:100%;border:2px dashed var(--gl);background:var(--gb);border-radius:var(--radius);padding:14px;font-size:14px;font-weight:700;color:var(--green);font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+.add-crop-btn:active{background:var(--gp);}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:430px;padding:16px 16px 40px;max-height:85vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;}
+
+/* View toggle */
+.view-toggle{display:flex;background:var(--glg);border-radius:var(--rsm);padding:3px;margin-bottom:10px;gap:3px;}
+.vt-btn{flex:1;padding:7px 4px;border:none;border-radius:6px;background:none;font-size:13px;font-weight:700;font-family:inherit;color:var(--tm);cursor:pointer;transition:all .15s;}
+.vt-btn.active{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+/* Toast notification */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,30,.9);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:300px;text-align:center;line-height:1.4;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:rgba(192,57,43,.92);}
+.toast.success{background:rgba(45,106,79,.92);}
+/* Init loading overlay */
+.init-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.init-overlay.hide{display:none;}
+/* More drawer */
+.more-overlay{position:fixed;inset:0;z-index:98;display:none;}
+.more-overlay.open{display:block;}
+.more-drawer{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:16px 16px 0 0;border-top:1px solid var(--border);box-shadow:0 -4px 20px rgba(0,0,0,.14);z-index:99;padding:16px 14px 12px;display:none;}
+.more-drawer.open{display:block;}
+.more-drawer-title{font-size:12px;color:var(--tm);margin-bottom:10px;text-align:center;}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.more-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--radius);background:var(--glg);cursor:pointer;border:1.5px solid var(--border);transition:background .12s;}
+.more-item:active{background:var(--gp);border-color:var(--gl);}
+.more-item-icon{font-size:26px;}
+.more-item-label{font-size:12px;font-weight:700;color:var(--green);text-align:center;line-height:1.3;}
+.spinner{width:40px;height:40px;border:3px solid var(--gp);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.init-msg{font-size:14px;color:var(--green);font-weight:700;}
+/* Crop group view */
+.cg-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.cg-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;}
+.cg-header:active{background:var(--glg);}
+.cg-emoji{font-size:22px;flex-shrink:0;}
+.cg-info{flex:1;min-width:0;}
+.cg-name{font-size:14px;font-weight:700;}
+.cg-meta{font-size:11px;color:var(--tm);margin-top:1px;}
+.cg-arrow{font-size:16px;color:var(--tm);flex-shrink:0;transition:transform .2s;line-height:1;}
+.cg-arrow.open{transform:rotate(90deg);}
+.cg-body{display:none;border-top:1px solid var(--border);}
+.cg-body.open{display:block;}
+.cg-row{display:flex;align-items:flex-start;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px;}
+.cg-row:last-child{border-bottom:none;}
+.cg-date{color:var(--tm);flex-shrink:0;width:52px;padding-top:2px;}
+.cg-type-wrap{flex:1;min-width:0;}
+.cg-val{font-weight:700;color:var(--green);flex-shrink:0;padding-top:2px;}
+.cg-memo{font-size:11px;color:var(--tm);margin-top:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="header-title">家庭菜園アシスタント</div>
+    <div class="header-sub" id="headerDate">長浜市 · 読み込み中...</div>
+  </div>
+  <div class="header-right">
+    <button class="notif-btn" onclick="showToast('アラート機能は準備中です')" title="通知">🔔</button>
+  </div>
+</div>
+
+<!-- Alert banner (frost alert demo) -->
+<div class="alert-banner hide" id="alertBanner"></div>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- ── ホーム ── -->
+  <div class="screen active" id="screen-home">
+    <div class="proto">※ 操作確認用サンプル画面です。実際のデータは入っていません。</div>
+
+    <div class="greeting">
+      <h2 id="greetingText">おはようございます</h2>
+      <p id="greetingWeather"></p>
+    </div>
+
+    <!-- アラートカード（GASのalertsで動的表示） -->
+    <div class="alert-card ac-frost" id="alertCard" style="display:none">
+      <div class="ac-icon" id="alertCardIcon">🌡️</div>
+      <div>
+        <div class="ac-title" id="alertCardTitle">霜アラート</div>
+        <div class="ac-body" id="alertCardBody"></div>
+      </div>
+    </div>
+
+    <!-- 今月の集計 -->
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-num" id="statWorkCount">0</div>
+        <div class="stat-unit">回</div>
+        <div class="stat-label">今月の作業</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statHarvestCnt">0</div>
+        <div class="stat-unit">回</div>
+        <div class="stat-label">今月の収穫</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statCropCount">0</div>
+        <div class="stat-unit">種</div>
+        <div class="stat-label">栽培中の作物</div>
+      </div>
+    </div>
+
+    <!-- GDD進捗 -->
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        生育進捗（収穫適期まで）
+      </div>
+      <div id="gddList"></div>
+    </div>
+
+    <!-- 週間天気 -->
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        <span id="wxCardTitle">今週の天気</span>
+      </div>
+      <div class="wx-row" id="wxRow">
+        <div style="font-size:12px;color:var(--tm);padding:8px 4px;">天気データを読み込み中…</div>
+      </div>
+    </div>
+
+    <!-- 最近の記録 -->
+    <div class="card">
+      <div class="card-title">最近の記録</div>
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- ── 記録入力 ── -->
+  <div class="screen" id="screen-record">
+    <div id="formView">
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">作業・収穫を記録する</h2>
+      <div class="form-prog">
+        <div class="fp-dot act" id="p1"></div>
+        <div class="fp-dot" id="p2"></div>
+        <div class="fp-dot" id="p3"></div>
+        <div class="fp-dot" id="p4"></div>
+        <div class="fp-dot" id="p5"></div>
+      </div>
+
+      <!-- 日付 -->
+      <div class="form-sec">
+        <div class="form-label">いつの作業ですか？ <span class="req">*</span></div>
+        <div class="form-hint">今日の日付が自動で入っています</div>
+        <div class="chip-group">
+          <div class="chip selected" id="todayChip" onclick="setToday()">今日</div>
+          <div class="chip" id="yesterdayChip" onclick="setYesterday()">昨日</div>
+          <div class="chip" id="otherChip" onclick="setOther()">別の日を選ぶ</div>
+        </div>
+        <div id="datePickerWrap" style="display:none;margin-top:10px;">
+          <input type="date" class="big-input" id="datePicker" onchange="onDatePick()">
+        </div>
+        <div id="selectedDateDisplay" style="margin-top:8px;font-size:15px;font-weight:700;color:var(--green);"></div>
+      </div>
+
+      <!-- 作物 -->
+      <div class="form-sec">
+        <div class="form-label">どの作物ですか？ <span class="req">*</span></div>
+        <div class="chip-group" id="cropGroup"></div>
+      </div>
+
+      <!-- 作業種別 -->
+      <div class="form-sec">
+        <div class="form-label">何をしましたか？ <span class="req">*</span></div>
+        <div class="chip-group" id="typeGroup">
+          <div class="chip" onclick="selType(this,'収穫')">🧺 収穫</div>
+          <div class="chip" onclick="selType(this,'水やり')">💧 水やり</div>
+          <div class="chip" onclick="selType(this,'追肥')">🌿 追肥</div>
+          <div class="chip" onclick="selType(this,'草取り')">✂️ 草取り</div>
+          <div class="chip" onclick="selType(this,'支柱立て')">🪵 支柱立て</div>
+          <div class="chip" onclick="selType(this,'農薬散布')">🚿 農薬散布</div>
+          <div class="chip" onclick="selType(this,'芽かき')">🌱 芽かき</div>
+          <div class="chip" onclick="selType(this,'その他')">・・・ その他</div>
+        </div>
+      </div>
+
+      <!-- 数量 -->
+      <div class="form-sec" id="qtySection" style="display:none">
+        <div class="form-label">収穫した量は？</div>
+        <div class="form-hint">わからなければ空欄でも大丈夫です</div>
+        <div class="num-row">
+          <button class="num-btn" onclick="changeQty(-1)">−</button>
+          <div class="num-disp" id="qtyDisp">0</div>
+          <button class="num-btn" onclick="changeQty(1)">＋</button>
+        </div>
+        <div class="chip-group" id="unitGroup" style="margin-top:10px;">
+          <div class="chip selected" onclick="selUnit(this,'個')">個</div>
+          <div class="chip" onclick="selUnit(this,'kg')">kg</div>
+          <div class="chip" onclick="selUnit(this,'束')">束</div>
+          <div class="chip" onclick="selUnit(this,'g')">g</div>
+        </div>
+      </div>
+
+      <!-- メモ -->
+      <div class="form-sec">
+        <div class="form-label">メモ（任意）</div>
+        <textarea class="big-input" id="memoInput" rows="3" placeholder="気になったことがあれば…"></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="submitRecord()">記録を保存する</button>
+    </div>
+
+    <div class="success-screen" id="successView">
+      <div class="suc-icon">✅</div>
+      <div class="suc-title">記録しました！</div>
+      <div class="suc-sub">お疲れ様でした。<br>記録が保存されました。</div>
+      <div class="suc-summary" id="summaryBox"></div>
+      <button class="submit-btn" onclick="resetForm()">続けて別の記録をする</button>
+      <button class="sub-btn" onclick="switchNav('home')">ホームに戻る</button>
+    </div>
+  </div>
+
+  <!-- ── 記録一覧 ── -->
+  <div class="screen" id="screen-history">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:10px;">記録一覧</h2>
+
+    <div class="view-toggle">
+      <button class="vt-btn active" id="vt-list" onclick="switchHistView('list')">📋 一覧</button>
+      <button class="vt-btn" id="vt-crops" onclick="switchHistView('crops')">🌱 作物別</button>
+    </div>
+
+    <div id="histListControls">
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="filterHist(this,'all')">すべて</div>
+        <div class="filter-chip" onclick="filterHist(this,'harvest')">収穫</div>
+        <div class="filter-chip" onclick="filterHist(this,'water')">水やり</div>
+        <div class="filter-chip" onclick="filterHist(this,'fert')">追肥</div>
+      </div>
+      <div id="histList"></div>
+    </div>
+
+    <div id="histCropView" style="display:none;"></div>
+  </div>
+
+  <!-- ── AIアドバイス ── -->
+  <div class="screen" id="screen-ai">
+
+    <!-- ① アドバイスの長さ選択 -->
+    <div class="card" style="margin-bottom:10px;padding:10px 14px;">
+      <div style="font-size:12px;color:var(--tm);margin-bottom:6px;">アドバイスの長さ</div>
+      <div style="display:flex;gap:6px;">
+        <button class="style-btn" id="styleBtn-detail" onclick="setAdviceStyle('detail',this)">丁寧</button>
+        <button class="style-btn active" id="styleBtn-normal" onclick="setAdviceStyle('normal',this)">普通</button>
+        <button class="style-btn" id="styleBtn-brief" onclick="setAdviceStyle('brief',this)">簡潔</button>
+      </div>
+    </div>
+
+    <!-- ④ 両ボタン常時表示 -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="ai-ask-btn" style="flex:1;" onclick="runAI()">🤖 今日のアドバイス</button>
+      <button class="ai-ask-btn" style="flex:1;background:linear-gradient(135deg,#0891b2,#0e7490);" onclick="showConsultPanel()">💬 Geminiに相談</button>
+    </div>
+
+    <!-- 相談パネル（常時表示・初期は折りたたみ） -->
+    <div class="card" id="consultPanel" style="display:none;margin-bottom:12px;">
+      <div class="card-title">💬 気になることを相談する</div>
+      <textarea class="big-input" id="consultText" rows="3" placeholder="例：トマトの葉が黄色くなってきました…"></textarea>
+      <button class="submit-btn" style="margin-top:10px;font-size:14px;padding:12px;" onclick="runConsult()">Geminiに相談する</button>
+      <div id="consultResult" style="display:none;margin-top:12px;background:var(--gb);border-radius:var(--rsm);padding:12px;font-size:13px;line-height:1.8;"></div>
+    </div>
+
+    <div class="ai-loading" id="aiLoading">
+      <span class="ld-icon">🤖</span>
+      気象データと作業記録を分析中...
+      <div class="ld-dots"><span></span><span></span><span></span></div>
+      <div class="ld-msg">Geminiが考えています。少々お待ちください</div>
+    </div>
+    <div class="ai-result" id="aiResult" style="display:none;"></div>
+  </div>
+
+  <!-- ── 写真で相談 ── -->
+  <div class="screen" id="screen-photo">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">写真でAI相談</h2>
+
+    <div class="photo-tip">
+      <div class="photo-tip-title">📸 きれいに撮るコツ</div>
+      <ul>
+        <li>気になる部分（葉・実・茎など）に近づいて撮る</li>
+        <li>自然光の下で撮る</li>
+        <li>葉の症状は表と裏を2枚撮ると精度アップ</li>
+      </ul>
+    </div>
+
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event,1)">
+    <input type="file" id="photoInput2" accept="image/*" style="display:none" onchange="handlePhotoSelect(event,2)">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div class="photo-area" id="photoArea" style="flex:1;" onclick="document.getElementById('photoInput').click()">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">1枚目</div>
+        <div class="photo-sub">タップして選択</div>
+      </div>
+      <div class="photo-area" id="photoArea2" style="flex:1;" onclick="document.getElementById('photoInput2').click()">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">2枚目（任意）</div>
+        <div class="photo-sub">裏面など</div>
+      </div>
+    </div>
+
+    <img class="photo-preview" id="photoPreview" src="" alt="1枚目">
+    <img class="photo-preview" id="photoPreview2" src="" alt="2枚目">
+
+    <div class="form-sec">
+      <div class="form-label">どの作物ですか？</div>
+      <div class="chip-group" id="photocrops"></div>
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">症状を教えてください（任意）</div>
+      <textarea class="big-input" rows="2" placeholder="例：葉の裏に白い粉がついている"></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="runDiagnosis()">🤖 Geminiに相談する</button>
+
+    <div class="diag-result" id="diagResult" style="margin-top:14px;">
+      <div class="diag-title">🔍 診断結果：うどんこ病の疑い</div>
+      <div class="diag-body">
+        葉の表面に白い粉状のものが広がっている場合、うどんこ病（カビの一種）の可能性が高いです。梅雨前の乾燥気味な天候が続いた後に発生しやすい病気です。
+        <div class="diag-action">
+          <div class="diag-action-title">対処法</div>
+          ① 発症した葉を取り除いてビニール袋に入れて捨てる<br>
+          ② 市販の殺菌剤（カリグリーンなど）を散布する<br>
+          ③ 株間を広げて風通しをよくする<br>
+          ④ 水やりは株元のみ、葉に水がかからないようにする
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 作付カレンダー ── -->
+  <div class="screen" id="screen-calendar">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;">作付カレンダー</h2>
+
+    <!-- 簡易カレンダー -->
+    <div class="card">
+      <div class="cal-month">
+        <button class="cal-month-btn" onclick="calPrev()">‹</button>
+        <div class="cal-month-label" id="calLabel">2026年5月</div>
+        <button class="cal-month-btn" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-head">日</div><div class="cal-head">月</div><div class="cal-head">火</div><div class="cal-head">水</div><div class="cal-head">木</div><div class="cal-head">金</div><div class="cal-head">土</div>
+      </div>
+      <div class="cal-grid" id="calDays"></div>
+    </div>
+
+    <!-- 種まき・定植スケジュール -->
+    <div class="card">
+      <div class="card-title">📋 今季の栽培スケジュール</div>
+      <div class="cal-plant cp-tomato">
+        <div class="cp-icon">🍅</div>
+        <div class="cp-body">
+          <div class="cp-name">トマト</div>
+          <div class="cp-dates">定植：4月5日 → 収穫適期：5月下旬〜</div>
+          <div class="cp-progress">✅ 収穫中</div>
+        </div>
+      </div>
+      <div class="cal-plant cp-cucumber">
+        <div class="cp-icon">🥒</div>
+        <div class="cp-body">
+          <div class="cp-name">キュウリ</div>
+          <div class="cp-dates">定植：4月10日 → 収穫適期：5月中旬〜</div>
+          <div class="cp-progress">🟢 収穫適期！</div>
+        </div>
+      </div>
+      <div class="cal-plant cp-eggplant">
+        <div class="cp-icon">🍆</div>
+        <div class="cp-body">
+          <div class="cp-name">ナス</div>
+          <div class="cp-dates">定植：4月15日 → 収穫適期：6月上旬〜</div>
+          <div class="cp-progress">⏳ 生育中（48%）</div>
+        </div>
+      </div>
+      <div class="cal-plant cp-watermelon">
+        <div class="cp-icon">🍉</div>
+        <div class="cp-body">
+          <div class="cp-name">スイカ</div>
+          <div class="cp-dates">定植：4月20日 → 収穫適期：7月下旬〜</div>
+          <div class="cp-progress">⏳ 生育中（31%）</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 来季AI提案 -->
+    <div class="card">
+      <div class="card-title">🤖 来季の種まきAI提案（長浜市）</div>
+      <div style="font-size:12px;line-height:1.8;color:var(--tm);">
+        長浜市の気候データから、来年の推奨種まき時期を計算しました。
+      </div>
+      <table style="width:100%;font-size:12px;margin-top:10px;border-collapse:collapse;">
+        <tr style="background:var(--gb);">
+          <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">作物</th>
+          <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">種まき</th>
+          <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">定植</th>
+          <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">収穫開始</th>
+        </tr>
+        <tr><td style="padding:6px 8px;">🍅 トマト</td><td style="padding:6px 8px;">3月上旬</td><td style="padding:6px 8px;">4月上旬</td><td style="padding:6px 8px;">6月上旬</td></tr>
+        <tr style="background:var(--glg)"><td style="padding:6px 8px;">🥒 キュウリ</td><td style="padding:6px 8px;">3月下旬</td><td style="padding:6px 8px;">4月中旬</td><td style="padding:6px 8px;">5月中旬</td></tr>
+        <tr><td style="padding:6px 8px;">🍆 ナス</td><td style="padding:6px 8px;">3月上旬</td><td style="padding:6px 8px;">4月中旬</td><td style="padding:6px 8px;">6月上旬</td></tr>
+        <tr style="background:var(--glg)"><td style="padding:6px 8px;">🥬 白菜</td><td style="padding:6px 8px;">8月下旬</td><td style="padding:6px 8px;">9月中旬</td><td style="padding:6px 8px;">11月下旬</td></tr>
+        <tr><td style="padding:6px 8px;">🌱 大根</td><td style="padding:6px 8px;">9月上旬</td><td style="padding:6px 8px;">直播き</td><td style="padding:6px 8px;">12月上旬</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 将来機能 ── -->
+  <div class="screen" id="screen-future">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">将来追加予定の機能</h2>
+    <div class="proto">これらの機能は現在開発中または計画中です。</div>
+
+    <div class="future-section">
+      <div class="future-title">💬 LINE連携</div>
+      <div class="future-item"><div class="fi-icon">📩</div><div>「今日水やりする？」とLINEに送ると自動回答</div></div>
+      <div class="future-item"><div class="fi-icon">🌡️</div><div>霜アラートをLINEで自動通知</div></div>
+      <div class="future-item"><div class="fi-icon">🧺</div><div>「トマト3個収穫した」とLINEで送ると自動記録</div></div>
+      <div class="future-item"><div class="fi-icon">📊</div><div>月次レポート完成をLINEでお知らせ</div></div>
+    </div>
+
+    <div class="future-section">
+      <div class="future-title">🎤 音声入力</div>
+      <div class="future-item"><div class="fi-icon">🗣️</div><div>「今日ナスを2本収穫した」と話すだけで記録</div></div>
+      <div class="future-item"><div class="fi-icon">❓</div><div>「最近トマトが元気ないんだけど」と話しかけてAIに相談</div></div>
+    </div>
+
+    <div class="future-section">
+      <div class="future-title">📸 成長記録</div>
+      <div class="future-item"><div class="fi-icon">📷</div><div>定点撮影して作物の成長を写真で記録・振り返り</div></div>
+      <div class="future-item"><div class="fi-icon">📈</div><div>昨年の同時期と写真で比較</div></div>
+    </div>
+
+    <div class="future-section">
+      <div class="future-title">📊 振り返りレポート</div>
+      <div class="future-item"><div class="fi-icon">🗓️</div><div>シーズン総括：「今年うまくいった作物・失敗した作物」をAIが分析</div></div>
+      <div class="future-item"><div class="fi-icon">💡</div><div>来年への提言を自動生成</div></div>
+      <div class="future-item"><div class="fi-icon">🌦️</div><div>気象×収穫量の相関分析</div></div>
+    </div>
+  </div>
+
+  <!-- ── AIアドバイス履歴 ── -->
+  <div class="screen" id="screen-ailog">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">📚 AIアドバイス履歴</h2>
+    <p style="font-size:12px;color:var(--tm);margin-bottom:14px;">保存されたAIアドバイス・相談の履歴を振り返ることができます。</p>
+    <button class="submit-btn" style="margin-bottom:14px;font-size:14px;padding:12px;" onclick="loadAILogs()">🔄 履歴を読み込む</button>
+    <div id="aiLogLoading" style="display:none;text-align:center;padding:20px;">
+      <span class="ld-icon" style="font-size:28px;display:block;margin-bottom:8px;animation:ldSpin 2s linear infinite;">📚</span>
+      <div class="ld-dots"><span></span><span></span><span></span></div>
+      <div style="font-size:12px;color:var(--tm);margin-top:8px;">履歴を読み込んでいます...</div>
+    </div>
+    <div id="aiLogList"></div>
+  </div>
+
+  <!-- ── 操作マニュアル ── -->
+  <div class="screen" id="screen-manual">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">📖 操作マニュアル</h2>
+
+    <!-- タブ -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;">
+      <button class="manual-tab active" id="mtab-overview" onclick="switchManualTab('overview',this)">概要</button>
+      <button class="manual-tab" id="mtab-howto" onclick="switchManualTab('howto',this)">操作説明</button>
+      <button class="manual-tab" id="mtab-other" onclick="switchManualTab('other',this)">その他</button>
+    </div>
+
+    <!-- 1. システム概要 -->
+    <div id="manual-overview" class="manual-section">
+      <div class="manual-card">
+        <div class="manual-section-title">🌱 システムの目的</div>
+        <p class="manual-text">この「家庭菜園スマートAIアシスタント」は、家庭菜園の日々の作業管理・記録・分析をスマートフォンで手軽に行えるシステムです。AIが気象データや作業記録を分析して、今日すべき作業のアドバイスを自動生成します。</p>
+        <div class="manual-effect-grid">
+          <div class="manual-effect"><div class="me-icon">📝</div><div class="me-text">作業を<br>記録できる</div></div>
+          <div class="manual-effect"><div class="me-icon">🌤️</div><div class="me-text">天気予報と<br>連動</div></div>
+          <div class="manual-effect"><div class="me-icon">🤖</div><div class="me-text">AIが今日の<br>作業を提案</div></div>
+          <div class="manual-effect"><div class="me-icon">📷</div><div class="me-text">写真で<br>AI相談</div></div>
+        </div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">🏗️ システム構成</div>
+        <div class="manual-arch">
+          <div class="ma-box ma-phone">
+            <div class="ma-icon">📱</div>
+            <div class="ma-title">このアプリ</div>
+            <div class="ma-desc">スマートフォンで<br>操作する画面</div>
+          </div>
+          <div class="ma-arrow">⇄<br><span>インターネット</span></div>
+          <div class="ma-box ma-gas">
+            <div class="ma-icon">⚙️</div>
+            <div class="ma-title">処理サーバー</div>
+            <div class="ma-desc">Google Apps Script<br>データを仲介・保存</div>
+          </div>
+          <div class="ma-arrow">⇄</div>
+          <div class="ma-col">
+            <div class="ma-box ma-ai" style="margin-bottom:8px;">
+              <div class="ma-icon">🤖</div>
+              <div class="ma-title">Gemini AI</div>
+              <div class="ma-desc">アドバイスを生成</div>
+            </div>
+            <div class="ma-box ma-sheet">
+              <div class="ma-icon">📊</div>
+              <div class="ma-title">スプレッドシート</div>
+              <div class="ma-desc">記録を保存</div>
+            </div>
+          </div>
+        </div>
+        <div class="manual-flow-note">
+          <b>データの流れ：</b>あなたがアプリに入力した作業記録は、インターネット経由でGoogle のスプレッドシートに自動保存されます。AIアドバイスは、保存された記録と天気データを読み取り、Gemini AIが生成して返送します。
+        </div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">📱 このアプリでできること</div>
+        <div class="manual-feature-list">
+          <div class="mf-item"><span class="mf-icon">🏠</span><div><b>ホーム画面</b> — 今日の天気・作物の生育状況・最近の作業記録を一目で確認</div></div>
+          <div class="mf-item"><span class="mf-icon">📝</span><div><b>作業を記録</b> — 水やり・収穫・追肥などの作業を日付と一緒に記録</div></div>
+          <div class="mf-item"><span class="mf-icon">📋</span><div><b>記録一覧</b> — 過去の作業履歴を作物別・種類別に確認</div></div>
+          <div class="mf-item"><span class="mf-icon">🤖</span><div><b>AIアドバイス</b> — 今日の天気と記録をもとに、Geminiが作業アドバイスを提案</div></div>
+          <div class="mf-item"><span class="mf-icon">📷</span><div><b>写真AI相談</b> — 気になる葉や実の写真を撮って、AIに状態を相談</div></div>
+          <div class="mf-item"><span class="mf-icon">🌱</span><div><b>作物管理</b> — 栽培している作物の追加・編集・終了管理</div></div>
+          <div class="mf-item"><span class="mf-icon">📚</span><div><b>AIアドバイス履歴</b> — 過去にもらったAIアドバイスを振り返り</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 操作説明 -->
+    <div id="manual-howto" class="manual-section" style="display:none;">
+
+      <div class="manual-card">
+        <div class="manual-section-title">🏠 ホーム画面</div>
+        <div class="manual-step-list">
+          <div class="ms-item"><div class="ms-num">1</div><div><b>天気予報</b>を確認 — 今日〜1週間先の天気・最高気温（赤）・最低気温（青）が表示されます</div></div>
+          <div class="ms-item"><div class="ms-num">2</div><div><b>生育進捗バー</b>を確認 — バーが100%に近づくと収穫適期のサインです</div></div>
+          <div class="ms-item"><div class="ms-num">3</div><div><b>アラートバナー</b>が表示されたら要注意 — 霜（赤）・猛暑（橙）・長雨（青）・収穫適期（緑）</div></div>
+        </div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">📝 作業を記録する</div>
+        <div class="manual-step-list">
+          <div class="ms-item"><div class="ms-num">1</div><div>下のナビバー「記録」をタップ</div></div>
+          <div class="ms-item"><div class="ms-num">2</div><div>日付を選択（今日・昨日・別の日から選べます）</div></div>
+          <div class="ms-item"><div class="ms-num">3</div><div>作物のボタンをタップして選択</div></div>
+          <div class="ms-item"><div class="ms-num">4</div><div>作業の種類（水やり・収穫・追肥など）を選択</div></div>
+          <div class="ms-item"><div class="ms-num">5</div><div>メモがあれば入力（任意）</div></div>
+          <div class="ms-item"><div class="ms-num">6</div><div>「保存する」ボタンをタップ → 自動でスプレッドシートに保存されます</div></div>
+        </div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">🤖 AIアドバイスをもらう</div>
+        <div class="manual-step-list">
+          <div class="ms-item"><div class="ms-num">1</div><div>下のナビバー「AI」をタップ</div></div>
+          <div class="ms-item"><div class="ms-num">2</div><div>アドバイスの長さを選択（丁寧・普通・簡潔）</div></div>
+          <div class="ms-item"><div class="ms-num">3</div><div>「今日のアドバイス」ボタンをタップ — 天気と記録をもとにAIが提案します（30〜60秒かかります）</div></div>
+          <div class="ms-item"><div class="ms-num">4</div><div>相談したいことがあれば「Geminiに相談」ボタンから質問できます</div></div>
+        </div>
+        <div class="manual-note">💡 アドバイス内容は自動でAI履歴に保存されます</div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">📷 写真でAIに相談する</div>
+        <div class="manual-step-list">
+          <div class="ms-item"><div class="ms-num">1</div><div>その他メニュー「写真診断」をタップ</div></div>
+          <div class="ms-item"><div class="ms-num">2</div><div>「1枚目」をタップ → カメラで撮影またはアルバムから選択</div></div>
+          <div class="ms-item"><div class="ms-num">3</div><div>葉の裏など補足がある場合は「2枚目」も選択（任意）</div></div>
+          <div class="ms-item"><div class="ms-num">4</div><div>作物を選択し、気になる点をテキストで入力（任意）</div></div>
+          <div class="ms-item"><div class="ms-num">5</div><div>「Geminiに相談する」をタップ → AIが診断・回答します</div></div>
+        </div>
+        <div class="manual-note">📸 撮影のコツ：気になる部分に近づいて、自然光の下で撮ると精度が上がります</div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">🌱 作物を管理する</div>
+        <div class="manual-step-list">
+          <div class="ms-item"><div class="ms-num">1</div><div>下のナビバー「作物」をタップ</div></div>
+          <div class="ms-item"><div class="ms-num">2</div><div><b>追加</b>：「作物を追加」ボタン → 作物名・識別子（例：南側）・定植日を入力</div></div>
+          <div class="ms-item"><div class="ms-num">3</div><div><b>編集</b>：各作物カードの「編集」ボタンで定植日などを変更</div></div>
+          <div class="ms-item"><div class="ms-num">4</div><div><b>終了</b>：「栽培終了」ボタンで非表示にします（記録は残ります）</div></div>
+        </div>
+        <div class="manual-note">💡 同じ作物を複数箇所に植えている場合は「識別子」で区別できます（例：スイカ＋南側）</div>
+      </div>
+    </div>
+
+    <!-- 3. その他 -->
+    <div id="manual-other" class="manual-section" style="display:none;">
+
+      <div class="manual-card">
+        <div class="manual-section-title">🔧 使用技術</div>
+        <table class="manual-table">
+          <tr><th>技術・サービス</th><th>用途</th></tr>
+          <tr><td>HTML / CSS / JavaScript</td><td>このアプリ本体（インストール不要で動作）</td></tr>
+          <tr><td>Netlify</td><td>アプリの配信サーバー（URL固定・常時稼働）</td></tr>
+          <tr><td>Google Apps Script</td><td>データの仲介・保存処理。APIキー管理</td></tr>
+          <tr><td>Googleスプレッドシート</td><td>作業記録・作物マスタの永続保存</td></tr>
+          <tr><td>Gemini 2.5 Flash（Google）</td><td>AIアドバイス・写真診断の生成</td></tr>
+          <tr><td>気象庁API</td><td>天気予報データ（日本公式・無料）</td></tr>
+          <tr><td>Open-Meteo</td><td>最高・最低気温データ（無料）</td></tr>
+        </table>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">🔒 セキュリティについて</div>
+        <div class="manual-feature-list">
+          <div class="mf-item"><span class="mf-icon">🔑</span><div><b>APIキーはアプリに含まれません</b> — GeminiのAPIキーはGoogleのサーバー上で管理されており、このアプリのコードには含まれていません</div></div>
+          <div class="mf-item"><span class="mf-icon">🔐</span><div><b>通信はすべてHTTPS暗号化</b> — アプリとサーバーの通信は暗号化されており、第三者に傍受されません</div></div>
+          <div class="mf-item"><span class="mf-icon">👤</span><div><b>個人情報は保存しません</b> — 氏名・住所などの個人情報は保存していません。記録されるのは作業内容のみです</div></div>
+          <div class="mf-item"><span class="mf-icon">📷</span><div><b>写真はAI処理後に保存されません</b> — 写真AI相談に使った画像はAI処理にのみ使われ、サーバーには保存されません</div></div>
+          <div class="mf-item"><span class="mf-icon">🌐</span><div><b>データの保管場所</b> — 作業記録はGoogleスプレッドシートに保存されます。Googleの高いセキュリティ基準で管理されています</div></div>
+        </div>
+      </div>
+
+      <div class="manual-card">
+        <div class="manual-section-title">❓ よくある質問</div>
+        <div class="manual-faq">
+          <div class="faq-item">
+            <div class="faq-q">Q. AIアドバイスに時間がかかるのはなぜ？</div>
+            <div class="faq-a">A. AIが天気データ・作業記録・栽培中の作物を総合的に分析してから回答を生成するため、30〜90秒かかる場合があります。画面はそのまま待ってください。</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Q. アプリを閉じると記録は消える？</div>
+            <div class="faq-a">A. 消えません。保存した記録はGoogleスプレッドシートに自動保存されるため、アプリを閉じても安全です。</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Q. 天気が実際と違う場合は？</div>
+            <div class="faq-a">A. 気象庁の予報データを使用していますが、局地的な天気は異なる場合があります。アドバイスの参考程度にご利用ください。</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Q. オフラインでも使える？</div>
+            <div class="faq-a">A. インターネット接続が必要です。接続がない場合は、記録の保存やAIアドバイスが利用できません。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 作物管理 ── -->
+  <div class="screen" id="screen-crops">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <h2 style="font-size:18px;font-weight:700;">作物管理</h2>
+      <span style="font-size:12px;color:var(--tm);" id="cropCount">0種類栽培中</span>
+    </div>
+
+    <div id="cropList"></div>
+
+    <button class="add-crop-btn" onclick="openAddModal()">
+      <span style="font-size:20px;line-height:1;">＋</span> 作物を追加する
+    </button>
+
+    <div style="margin-top:12px;background:var(--gb);border-radius:var(--rsm);padding:10px 12px;font-size:11px;color:var(--tm);line-height:1.6;">
+      📅 各作物の定植日は「📅」ボタンから変更できます。<br>
+      🗑️ 削除するとホーム画面の生育進捗からも削除されます。
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- 作物追加モーダル -->
+<div class="modal-overlay" id="addModal" onclick="closeAddModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">作物を追加する</div>
+
+    <div class="form-sec">
+      <div class="form-label">作物を選ぶ <span class="req">*</span></div>
+      <div class="chip-group" id="addCropChips">
+        <div class="chip" onclick="pickAddCrop(this,'🍅','トマト')">🍅 トマト</div>
+        <div class="chip" onclick="pickAddCrop(this,'🥒','キュウリ')">🥒 キュウリ</div>
+        <div class="chip" onclick="pickAddCrop(this,'🍆','ナス')">🍆 ナス</div>
+        <div class="chip" onclick="pickAddCrop(this,'🍉','スイカ')">🍉 スイカ</div>
+        <div class="chip" onclick="pickAddCrop(this,'🥬','白菜')">🥬 白菜</div>
+        <div class="chip" onclick="pickAddCrop(this,'🌱','大根')">🌱 大根</div>
+        <div class="chip" onclick="pickAddCrop(this,'🫑','ピーマン')">🫑 ピーマン</div>
+        <div class="chip" onclick="pickAddCrop(this,'🧅','玉ねぎ')">🧅 玉ねぎ</div>
+        <div class="chip" onclick="pickAddCrop(this,'🌽','とうもろこし')">🌽 とうもろこし</div>
+        <div class="chip" onclick="pickAddCrop(this,'🫛','えだまめ')">🫛 えだまめ</div>
+        <div class="chip" onclick="pickAddCrop(this,'🌿','新規')">🌿 新規（自由入力）</div>
+      </div>
+      <div id="customCropWrap" style="display:none;margin-top:10px;">
+        <input type="text" class="big-input" id="customCropName" placeholder="作物名を入力（例：パプリカ）" maxlength="20">
+      </div>
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">識別子（任意）</div>
+      <div class="form-hint">同じ作物を複数植える場合に区別するための記号です（例：1、2、A、B、南側）</div>
+      <input type="text" class="big-input" id="addCropTag" placeholder="例：1、B、南側（省略可）" maxlength="8">
+      <div id="addTagPreview" style="margin-top:6px;font-size:13px;color:var(--green);font-weight:700;min-height:20px;"></div>
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">定植日（または種まき日） <span class="req">*</span></div>
+      <input type="date" class="big-input" id="addPlantDate">
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">メモ（任意）</div>
+      <input type="text" class="big-input" id="addCropMemo" placeholder="例：第2畝 南側、接ぎ木苗">
+    </div>
+
+    <button class="submit-btn" onclick="addCrop()">追加する</button>
+    <button class="sub-btn" onclick="closeAddModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- 定植日変更モーダル -->
+<div class="modal-overlay" id="editDateModal" onclick="closeEditModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editDateTitle">作物情報を編集</div>
+
+    <div class="form-sec">
+      <div class="form-label">識別子（任意）</div>
+      <div class="form-hint">同じ作物を複数植える場合に使います（例：1、B、南側）</div>
+      <input type="text" class="big-input" id="editTagInput" placeholder="例：1、B、南側（省略可）" maxlength="8">
+      <div id="editTagPreview" style="margin-top:6px;font-size:13px;color:var(--green);font-weight:700;min-height:20px;"></div>
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">定植日（または種まき日） <span class="req">*</span></div>
+      <input type="date" class="big-input" id="editDateInput">
+    </div>
+
+    <div class="form-sec">
+      <div class="form-label">メモ（任意）</div>
+      <input type="text" class="big-input" id="editMemoInput" placeholder="例：第2畝 南側">
+    </div>
+
+    <button class="submit-btn" onclick="saveEditDate()">保存する</button>
+    <button class="sub-btn" onclick="closeEditModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- Nav（5+1ボタン） -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-home" onclick="switchNav('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    ホーム
+  </button>
+  <button class="nav-btn" id="nav-record" onclick="switchNav('record')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    記録
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="switchNav('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    一覧
+  </button>
+  <button class="nav-btn" id="nav-ai" onclick="switchNav('ai')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    AI相談
+  </button>
+  <button class="nav-btn" id="nav-crops" onclick="switchNav('crops')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12"/><path d="M12 12C12 7 7 5 3 6c0 4 2 8 9 6"/><path d="M12 12c0-5 5-7 9-6-1 4-4 8-9 6"/></svg>
+    作物
+  </button>
+  <button class="nav-btn" id="nav-more" onclick="toggleMoreDrawer()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    その他
+  </button>
+</nav>
+
+<!-- その他ドロワー -->
+<div id="moreOverlay" class="more-overlay" onclick="closeMoreDrawer()"></div>
+<div id="moreDrawer" class="more-drawer">
+  <div class="more-drawer-title">その他のメニュー</div>
+  <div class="more-grid">
+    <div class="more-item" onclick="switchNavFromMore('photo')">
+      <div class="more-item-icon">📷</div>
+      <div class="more-item-label">写真診断</div>
+    </div>
+    <div class="more-item" onclick="switchNavFromMore('calendar')">
+      <div class="more-item-icon">📅</div>
+      <div class="more-item-label">作付<br>カレンダー</div>
+    </div>
+    <div class="more-item" onclick="switchNavFromMore('ailog')">
+      <div class="more-item-icon">📚</div>
+      <div class="more-item-label">AI履歴</div>
+    </div>
+    <div class="more-item" onclick="switchNavFromMore('manual')">
+      <div class="more-item-icon">📖</div>
+      <div class="more-item-label">操作<br>マニュアル</div>
+    </div>
+    <div class="more-item" onclick="switchNavFromMore('future')">
+      <div class="more-item-icon">🔮</div>
+      <div class="more-item-label">将来機能</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast" class="toast"></div>
+<!-- 起動時ローディング -->
+<div id="initOverlay" class="init-overlay">
+  <div class="spinner"></div>
+  <div class="init-msg">データを読み込んでいます...</div>
+</div>
+
+<script>
+// ── アプリ定数（長浜移行時はこの2行を変えるだけ） ──
+const USER_NAME = '横浜（試作）';
+const LOCATION_NAME = '横浜市';
+
+// ── GAS設定 ──
+var GAS_URL='https://script.google.com/macros/s/AKfycbzBQSUP2_6mtQ0rwH09bH6XrDEl1irVc2B-GaAcUDJ_BYX645arDGYlMQ-2e1CbFyiEBg/exec';
+var selectedPhotoB64='',selectedPhotoType='',selectedPhotoB64_2='',selectedPhotoType2='';
+
+// ── トースト ──
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(type?' '+type:'');
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid=setTimeout(function(){t.classList.remove('show');},3500);
+}
+
+// ── GAS通信 ──
+function gasTimeout(ms){
+  return new Promise(function(_,reject){
+    setTimeout(function(){reject(new Error('timeout'));},ms);
+  });
+}
+function gasGet(action,params){
+  params=params||{};
+  var url=new URL(GAS_URL);
+  url.searchParams.set('action',action);
+  Object.keys(params).forEach(function(k){url.searchParams.set(k,params[k]);});
+  var req=fetch(url.toString(),{redirect:'follow'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  });
+  return Promise.race([req,gasTimeout(90000)]).catch(function(e){
+    console.warn('[GAS] '+action+' 失敗:',e.message||String(e));
+    throw e;
+  });
+}
+function gasPost(action,data){
+  data=data||{};
+  var body=Object.assign({action:action},data);
+  var req=fetch(GAS_URL,{
+    method:'POST',redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(body)
+  }).then(function(r){
+    if(!r.ok)throw new Error(r.status);
+    return r.json();
+  });
+  return Promise.race([req,gasTimeout(90000)]).catch(function(e){throw e;});
+}
+
+// ── 日付 ──
+var selDate=new Date(),selCropV='',selCropEmoji='🌱',selTypeV='',selUnitV='個',qty=0;
+function fmtJP(d){return(d.getMonth()+1)+'月'+d.getDate()+'日（'+['日','月','火','水','木','金','土'][d.getDay()]+'）';}
+function toInp(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function updDateDisp(){document.getElementById('selectedDateDisplay').textContent='▶ '+fmtJP(selDate);}
+function setToday(){selDate=new Date();document.getElementById('datePickerWrap').style.display='none';['todayChip','yesterdayChip','otherChip'].forEach(id=>document.getElementById(id).classList.remove('selected'));document.getElementById('todayChip').classList.add('selected');updDateDisp();}
+function setYesterday(){selDate=new Date();selDate.setDate(selDate.getDate()-1);document.getElementById('datePickerWrap').style.display='none';['todayChip','yesterdayChip','otherChip'].forEach(id=>document.getElementById(id).classList.remove('selected'));document.getElementById('yesterdayChip').classList.add('selected');updDateDisp();}
+function setOther(){['todayChip','yesterdayChip','otherChip'].forEach(id=>document.getElementById(id).classList.remove('selected'));document.getElementById('otherChip').classList.add('selected');var w=document.getElementById('datePickerWrap');w.style.display='block';var p=document.getElementById('datePicker');p.max=toInp(new Date());if(!p.value)p.value=toInp(new Date());}
+function onDatePick(){var v=document.getElementById('datePicker').value;if(v){var pts=v.split('-');selDate=new Date(+pts[0],+pts[1]-1,+pts[2]);updDateDisp();}}
+
+// ── 時間帯別挨拶 ──
+function getGreeting(){
+  var h=new Date().getHours();
+  if(h>=5&&h<11)return 'おはようございます';
+  if(h>=11&&h<17)return 'こんにちは';
+  if(h>=17&&h<21)return 'こんばんは';
+  return 'お疲れ様です';
+}
+
+// ── 気象庁 weatherCode → アイコン変換 ──
+// 気象庁コード: 100=晴,200=曇,300=雨,400=雪,500=雨/雪,etc.
+// Open-Meteo WMO コードも兼用（100未満）
+function weatherCodeToIcon(code){
+  if(code==null)return '☁️';
+  code=parseInt(code,10);
+  // 気象庁コード（100以上）
+  if(code>=100){
+    var c=Math.floor(code/100);
+    if(c===1)return '☀️';   // 晴
+    if(c===2)return '⛅';   // 曇
+    if(c===3)return '🌧️'; // 雨
+    if(c===4)return '❄️';  // 雪
+    if(c===5)return '🌨️'; // 雨/雪
+    return '☁️';
+  }
+  // Open-Meteo WMO コード（100未満・フォールバック用）
+  if(code===0)return '☀️';
+  if(code>=1&&code<=3)return '⛅';
+  if(code>=45&&code<=48)return '🌫️';
+  if(code>=51&&code<=67)return '🌧️';
+  if(code>=71&&code<=77)return '❄️';
+  if(code>=80&&code<=82)return '🌦️';
+  if(code>=95)return '⛈️';
+  return '☁️';
+}
+
+// ── 気象庁API + Open-Meteo ハイブリッド天気取得 ──
+// ── Phase2移行チェックリスト（config_nagahama.yaml の値に合わせて変更） ──
+// USER_NAME, LOCATION_NAME → GASのスクリプトプロパティから取得（GAS側で管理）
+// JMA_AREA_CODE: 横浜=140000(神奈川県) / 長浜=250000(滋賀県)
+// OPENMETEO_LAT/LON: 横浜=35.4884,139.5689 / 長浜=35.3808,136.2787
+var JMA_AREA_CODE='140000'; // Phase2では250000に変更（config_nagahama.yaml の jma_area_code に対応）
+var OPENMETEO_LAT=35.4884;
+var OPENMETEO_LON=139.5689;
+
+function fetchHybridWeather(){
+  // 気象庁: 天気コード・降水確率
+  var jmaUrl='https://www.jma.go.jp/bosai/forecast/data/forecast/'+JMA_AREA_CODE+'.json';
+  // Open-Meteo: 最高・最低気温
+  var omUrl='https://api.open-meteo.com/v1/forecast?latitude='+OPENMETEO_LAT+'&longitude='+OPENMETEO_LON
+    +'&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=7';
+
+  return Promise.all([
+    fetch(jmaUrl).then(function(r){return r.json();}).catch(function(){return null;}),
+    fetch(omUrl).then(function(r){return r.json();}).catch(function(){return null;})
+  ]).then(function(results){
+    var jmaData=results[0];
+    var omData=results[1];
+    return buildWeatherDays(jmaData,omData);
+  });
+}
+
+function buildWeatherDays(jmaData,omData){
+  var days=[];
+  // Open-Meteo気温
+  var omTemps={};
+  if(omData&&omData.daily&&omData.daily.time){
+    omData.daily.time.forEach(function(dt,i){
+      omTemps[dt]={
+        tmax:omData.daily.temperature_2m_max[i]!=null?Math.round(omData.daily.temperature_2m_max[i]):null,
+        tmin:omData.daily.temperature_2m_min[i]!=null?Math.round(omData.daily.temperature_2m_min[i]):null
+      };
+    });
+  }
+  // 気象庁データ解析
+  // data[0]=短期予報(今日〜明後日), data[1]=週間予報(今日〜7日後)
+  if(jmaData&&Array.isArray(jmaData)&&jmaData.length>0){
+    try{
+      // 短期予報 data[0]: 天気コード・降水確率
+      var shortSeries=jmaData[0].timeSeries;
+      var wxTimes=shortSeries[0].timeDefines;
+      var wxCodes=shortSeries[0].areas[0].weatherCodes;
+      var popTimesS=[],popValsS=[];
+      if(shortSeries[1]&&shortSeries[1].areas[0].pops){
+        popTimesS=shortSeries[1].timeDefines;
+        popValsS=shortSeries[1].areas[0].pops;
+      }
+      var shortMap={};
+      for(var i=0;i<wxTimes.length;i++){
+        var dt=wxTimes[i].substring(0,10);
+        if(!shortMap[dt])shortMap[dt]={code:parseInt(wxCodes[i],10),pop:0};
+      }
+      popTimesS.forEach(function(pt,pi){
+        var dt=pt.substring(0,10);
+        if(shortMap[dt]){var v=parseInt(popValsS[pi],10);if(!isNaN(v)&&v>shortMap[dt].pop)shortMap[dt].pop=v;}
+      });
+      // 週間予報 data[1]
+      var weekMap={};
+      if(jmaData.length>1&&jmaData[1].timeSeries){
+        var weekSeries=jmaData[1].timeSeries;
+        var wkTimes=weekSeries[0].timeDefines;
+        var wkCodes=weekSeries[0].areas[0].weatherCodes;
+        var popTimesW=[],popValsW=[];
+        if(weekSeries[1]&&weekSeries[1].areas[0].pops){popTimesW=weekSeries[1].timeDefines;popValsW=weekSeries[1].areas[0].pops;}
+        for(var j=0;j<wkTimes.length;j++){
+          var wdt=wkTimes[j].substring(0,10);
+          if(!weekMap[wdt])weekMap[wdt]={code:parseInt(wkCodes[j],10),pop:0};
+        }
+        popTimesW.forEach(function(pt,pi){
+          var dt=pt.substring(0,10);
+          if(weekMap[dt]){var v=parseInt(popValsW[pi],10);if(!isNaN(v)&&v>weekMap[dt].pop)weekMap[dt].pop=v;}
+        });
+      }
+      // 今日から7日分
+      var now=new Date();
+      for(var d=0;d<7;d++){
+        var dd=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
+        var dstr=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
+        var wx=shortMap[dstr]||weekMap[dstr]||{code:null,pop:0};
+        var temps=omTemps[dstr]||{tmax:null,tmin:null};
+        days.push({date:dstr,code:wx.code,pop:wx.pop,tmax:temps.tmax,tmin:temps.tmin});
+      }
+    }catch(e){console.warn('[JMA] parse error',e);}
+  }
+  // 気象庁失敗時はOpen-Meteoのみで構成
+  if(days.length===0&&omData&&omData.daily&&omData.daily.time){
+    omData.daily.time.forEach(function(dt,i){
+      days.push({date:dt,code:null,pop:0,
+        tmax:omData.daily.temperature_2m_max[i]!=null?Math.round(omData.daily.temperature_2m_max[i]):null,
+        tmin:omData.daily.temperature_2m_min[i]!=null?Math.round(omData.daily.temperature_2m_min[i]):null
+      });
+    });
+  }
+  return days;
+}
+
+// ── 天気strip（静的・正確な曜日） ──
+function buildStaticWeather(){
+  var row=document.getElementById('wxRow');if(!row)return;
+  var dows=['日','月','火','水','木','金','土'];
+  var today=new Date();
+  var days=[{label:'今日',cls:'today'}];
+  for(var i=1;i<=6;i++){var d=new Date(today);d.setDate(d.getDate()+i);days.push({label:dows[d.getDay()],cls:''});}
+  row.innerHTML=days.map(function(d){
+    return '<div class="wx-day'+(d.cls?' '+d.cls:'')+'">'+
+      '<div class="wx-date">'+d.label+'</div>'+
+      '<div class="wx-icon">—</div>'+
+      '<div class="wx-temp"><span class="wx-tmax">—</span><span class="wx-tmin">—</span></div>'+
+      '<div class="wx-rain">—</div>'+
+      '</div>';
+  }).join('');
+  // ハイブリッド天気取得（気象庁 + Open-Meteo）
+  fetchHybridWeather().then(function(days){
+    if(days&&days.length>0)renderWeatherDays(days);
+  }).catch(function(e){console.warn('[Weather] hybrid fetch failed:',e);});
+}
+
+// ── ハイブリッド天気描画 ──
+function renderWeatherDays(days){
+  var row=document.getElementById('wxRow');if(!row||!days||days.length===0)return;
+  var dows=['日','月','火','水','木','金','土'];
+  var now=new Date();
+  var todayStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var startIdx=days.findIndex(function(d){return d.date===todayStr;});
+  if(startIdx<0)startIdx=0;
+  var slice=days.slice(startIdx,startIdx+7);
+  row.innerHTML=slice.map(function(d,i){
+    var parts=d.date.split('-');
+    var dayLabel=i===0?'今日':dows[new Date(+parts[0],+parts[1]-1,+parts[2]).getDay()];
+    var isFrost=d.tmin!=null&&d.tmin<3;
+    var isHeat=d.tmax!=null&&d.tmax>=35;
+    var bg=isFrost?'background:#fdecea':isHeat?'background:#fff3e0':'';
+    var rainTxt=isFrost?'霜注意':isHeat?'猛暑注意':(d.pop>0?d.pop+'%':'—');
+    var tmaxStr=d.tmax!=null?d.tmax+'°':'—';
+    var tminStr=d.tmin!=null?d.tmin+'°':'—';
+    return '<div class="wx-day'+(i===0?' today':'')+'"'+(bg?' style="'+bg+'"':'')+'>'+
+      '<div class="wx-date">'+dayLabel+'</div>'+
+      '<div class="wx-icon">'+weatherCodeToIcon(d.code)+'</div>'+
+      '<div class="wx-temp"><span class="wx-tmax">'+tmaxStr+'</span><span class="wx-tmin">'+tminStr+'</span></div>'+
+      '<div class="wx-rain">'+rainTxt+'</div>'+
+      '</div>';
+  }).join('');
+  // 挨拶カードのサブテキスト更新
+  if(slice.length>0){
+    var t=slice[0];
+    var grSub=document.getElementById('greetingWeather');
+    if(grSub){
+      var icon=weatherCodeToIcon(t.code);
+      var desc=(t.tmax!=null?'最高'+t.tmax+'°':'')+(t.tmin!=null?' 最低'+t.tmin+'°':'');
+      grSub.textContent=icon+' '+desc;
+    }
+  }
+}
+
+// ── Nav ──
+function switchNav(tab){
+  closeMoreDrawer();
+  ['home','record','history','ai','photo','calendar','future','crops','more','ailog','manual'].forEach(function(t){
+    var s=document.getElementById('screen-'+t);
+    var n=document.getElementById('nav-'+t);
+    if(s)s.classList.remove('active');
+    if(n)n.classList.remove('active');
+  });
+  document.getElementById('screen-'+tab).classList.add('active');
+  var nb=document.getElementById('nav-'+tab);
+  if(nb)nb.classList.add('active');
+  document.querySelector('.content').scrollTop=0;
+}
+
+// ── その他ドロワー ──
+function toggleMoreDrawer(){
+  var d=document.getElementById('moreDrawer');
+  var o=document.getElementById('moreOverlay');
+  var open=d.classList.toggle('open');
+  o.classList.toggle('open',open);
+  var nb=document.getElementById('nav-more');
+  if(nb)nb.classList.toggle('active',open);
+}
+function closeMoreDrawer(){
+  var d=document.getElementById('moreDrawer');
+  var o=document.getElementById('moreOverlay');
+  if(d)d.classList.remove('open');
+  if(o)o.classList.remove('open');
+  var nb=document.getElementById('nav-more');
+  if(nb)nb.classList.remove('active');
+}
+function switchNavFromMore(tab){
+  closeMoreDrawer();
+  // 全スクリーン非表示・全navボタン非アクティブ
+  ['home','record','history','ai','photo','calendar','future','crops','more','ailog','manual'].forEach(function(t){
+    var s=document.getElementById('screen-'+t);
+    var n=document.getElementById('nav-'+t);
+    if(s)s.classList.remove('active');
+    if(n)n.classList.remove('active');
+  });
+  var s=document.getElementById('screen-'+tab);
+  if(s)s.classList.add('active');
+  document.querySelector('.content').scrollTop=0;
+  // ≡その他ボタンをハイライト
+  var nb=document.getElementById('nav-more');
+  if(nb)nb.classList.add('active');
+}
+
+// ── Form ──
+function selCrop(el,v){
+  document.querySelectorAll('#cropGroup .chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');selCropV=v;
+  var found=crops.find(function(c){return cropDisplayName(c)===v;});
+  selCropEmoji=found?found.emoji:'🌿';
+}
+function selType(el,v){document.querySelectorAll('#typeGroup .chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selTypeV=v;document.getElementById('qtySection').style.display=v==='収穫'?'block':'none';}
+function selUnit(el,v){document.querySelectorAll('#unitGroup .chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selUnitV=v;}
+function changeQty(d){qty=Math.max(0,qty+d);document.getElementById('qtyDisp').textContent=qty;}
+function submitRecord(){
+  if(!selCropV||!selTypeV){alert('作物と作業の種類を選んでください');return;}
+  var memo=document.getElementById('memoInput').value.trim();
+  var dateStr=toInp(selDate);
+  var dateDisp=(selDate.getMonth()+1)+'月'+selDate.getDate()+'日';
+  var newRec={
+    id:recordIdCnt++,date:dateStr,dateDisp:dateDisp,
+    crop:selCropV,emoji:selCropEmoji,type:selTypeV,
+    cat:getCat(selTypeV),
+    qty:selTypeV==='収穫'?qty:0,unit:selUnitV,memo:memo
+  };
+  records.unshift(newRec);
+  renderHistory();
+  if(histView==='crops')renderHistCropView();
+  renderRecentRecords();renderStats();
+  var s='<div class="ss-row"><span class="ss-key">日付</span><span class="ss-val">'+fmtJP(selDate)+'</span></div>'
+       +'<div class="ss-row"><span class="ss-key">作物</span><span class="ss-val">'+selCropEmoji+' '+selCropV+'</span></div>'
+       +'<div class="ss-row"><span class="ss-key">作業</span><span class="ss-val">'+selTypeV+'</span></div>';
+  if(selTypeV==='収穫'&&qty>0)s+='<div class="ss-row"><span class="ss-key">収穫量</span><span class="ss-val">'+qty+selUnitV+'</span></div>';
+  if(memo)s+='<div class="ss-row"><span class="ss-key">メモ</span><span class="ss-val">'+memo+'</span></div>';
+  document.getElementById('summaryBox').innerHTML=s;
+  document.getElementById('formView').style.display='none';
+  document.getElementById('successView').style.display='block';
+  // GASへ保存（楽観的更新済み・バックグラウンド送信）
+  gasPost('saveRecord',{
+    date:dateStr, crop:selCropV, emoji:selCropEmoji,
+    workType:selTypeV,
+    quantity: qty > 0 ? qty : '',
+    unit: qty > 0 ? selUnitV : '',
+    memo: memo,
+    harvestQty: selTypeV==='収穫' && qty > 0 ? qty : ''
+  }).then(function(r){
+    if(r&&r.success){showToast('スプレッドシートに保存しました','success');}
+    else{showToast('保存に失敗しました（ローカルには記録済み）','error');}
+  }).catch(function(){showToast('通信エラー（ローカルには記録済み）','error');});
+}
+function resetForm(){selCropV='';selCropEmoji='🌱';selTypeV='';selUnitV='個';qty=0;selDate=new Date();document.querySelectorAll('#cropGroup .chip, #typeGroup .chip').forEach(c=>c.classList.remove('selected'));document.querySelectorAll('#unitGroup .chip')[0].classList.add('selected');document.getElementById('todayChip').classList.add('selected');document.getElementById('datePickerWrap').style.display='none';updDateDisp();document.getElementById('qtyDisp').textContent='0';document.getElementById('memoInput').value='';document.getElementById('qtySection').style.display='none';document.getElementById('formView').style.display='block';document.getElementById('successView').style.display='none';}
+
+// ── AI ──
+var adviceStyle='normal'; // 'detail'=丁寧 / 'normal'=普通 / 'brief'=簡潔
+
+function setAdviceStyle(style,el){
+  adviceStyle=style;
+  document.querySelectorAll('.style-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+}
+
+function showConsultPanel(){
+  var p=document.getElementById('consultPanel');
+  if(!p)return;
+  p.style.display=(p.style.display==='none')?'block':'none';
+  if(p.style.display==='block'){
+    var t=document.getElementById('consultText');
+    if(t)t.focus();
+  }
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ② Markdown → HTML 変換
+function markdownToHtml(md){
+  if(!md)return '';
+  var lines=md.split('\n');
+  var html='';
+  var inUl=false;
+  lines.forEach(function(line){
+    if(/^###\s+/.test(line)){
+      if(inUl){html+='</ul>';inUl=false;}
+      html+='<div class="md-h3">'+escHtml(line.replace(/^###\s+/,''))+'</div>';return;
+    }
+    if(/^##\s+/.test(line)){
+      if(inUl){html+='</ul>';inUl=false;}
+      html+='<div class="md-h2">'+escHtml(line.replace(/^##\s+/,''))+'</div>';return;
+    }
+    if(/^---+$/.test(line.trim())){
+      if(inUl){html+='</ul>';inUl=false;}
+      html+='<hr class="md-hr">';return;
+    }
+    if(/^[\*\-]\s+/.test(line)){
+      if(!inUl){html+='<ul class="md-ul">';inUl=true;}
+      html+='<li>'+inlineMd(line.replace(/^[\*\-]\s+/,''))+'</li>';return;
+    }
+    if(/^\d+\.\s+/.test(line)){
+      if(inUl){html+='</ul>';inUl=false;}
+      html+='<div style="margin:3px 0 3px 4px;font-size:13px;">'+inlineMd(line)+'</div>';return;
+    }
+    if(line.trim()===''){
+      if(inUl){html+='</ul>';inUl=false;}
+      html+='<div style="margin:3px 0;"></div>';return;
+    }
+    if(inUl){html+='</ul>';inUl=false;}
+    html+='<div style="font-size:13px;line-height:1.8;margin:2px 0;">'+inlineMd(line)+'</div>';
+  });
+  if(inUl)html+='</ul>';
+  return html;
+}
+function inlineMd(s){
+  return escHtml(s)
+    .replace(/\*\*(.+?)\*\*/g,'<span class="md-bold">$1</span>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--gb);padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+}
+
+
+function runAI(){
+  var ai=document.getElementById('aiResult');var ld=document.getElementById('aiLoading');
+  ai.style.display='none';ld.style.display='block';
+  gasPost('getAdvice',{style:adviceStyle}).then(function(r){
+    ld.style.display='none';
+    if(r&&r.success&&r.advice){
+      updateAIResult(r.advice);
+      ai.style.display='block';
+    }else{
+      ai.style.display='block';
+      ai.innerHTML='<div style="text-align:center;padding:24px;color:#c0392b;font-size:14px;">アドバイスを取得できませんでした。<br>時間をおいてもう一度お試しください。</div>';
+    }
+  }).catch(function(e){
+    console.warn('[GAS] getAdvice失敗:',e&&e.message||e);
+    ld.style.display='none';ai.style.display='block';
+    ai.innerHTML='<div style="text-align:center;padding:24px;color:#c0392b;font-size:14px;">通信エラーが発生しました。<br>時間をおいてもう一度お試しください。</div>';
+  });
+}
+
+function updateAIResult(advice, question){
+  var ai=document.getElementById('aiResult');
+  var html='<div class="ai-badge">🤖 AI アドバイス</div>';
+  html+='<div class="ai-card"><div class="ai-intro">'+markdownToHtml(advice)+'</div></div>';
+  ai.innerHTML=html;
+  // 自動保存（エラーは無視）
+  saveAdviceLog(question||'', advice);
+}
+
+function runConsult(){
+  var text=(document.getElementById('consultText').value||'').trim();
+  if(!text){showToast('相談内容を入力してください','error');return;}
+  var btn=document.querySelector('#consultPanel .submit-btn');
+  var res=document.getElementById('consultResult');
+  res.style.display='none';
+  if(btn){btn.disabled=true;btn.innerHTML='<span style="display:inline-block;animation:ldSpin 1.5s linear infinite">🤖</span> 考え中...';}
+  gasPost('getAdvice',{question:text,style:adviceStyle}).then(function(r){
+    if(btn){btn.disabled=false;btn.textContent='Geminiに相談する';}
+    if(r&&r.success&&r.advice){
+      res.innerHTML=markdownToHtml(r.advice);
+      res.style.display='block';
+      saveAdviceLog(text, r.advice);
+    }else{
+      showToast('回答を取得できませんでした','error');
+    }
+  }).catch(function(){
+    if(btn){btn.disabled=false;btn.textContent='Geminiに相談する';}
+    showToast('通信エラーが発生しました','error');
+  });
+}
+function simulateConsult(){runConsult();}
+
+
+// ── 写真 ──
+function handlePhotoSelect(event,num){
+  var file=event.target.files[0];if(!file)return;
+  var n=num||1;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result.split(',')[1];
+    var mtype=file.type;
+    var previewId=n===2?'photoPreview2':'photoPreview';
+    var areaId=n===2?'photoArea2':'photoArea';
+    var label=n===2?'2枚目':'1枚目';
+    if(n===2){selectedPhotoB64_2=b64;selectedPhotoType2=mtype;}
+    else{selectedPhotoB64=b64;selectedPhotoType=mtype;}
+    var preview=document.getElementById(previewId);
+    if(preview){preview.src=e.target.result;preview.style.display='block';}
+    var area=document.getElementById(areaId);
+    if(area){
+      area.classList.add('has-photo');
+      area.innerHTML='<div style="font-size:15px;color:var(--green);font-weight:700">✅ '+label+'選択済</div>'
+        +'<div style="font-size:11px;color:var(--tm);margin-top:3px">'+escHtml(file.name)+'</div>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+function selPC(el){document.querySelectorAll('#photocrops .chip').forEach(function(c){c.classList.remove('selected');});el.classList.add('selected');}
+function runDiagnosis(){
+  if(!selectedPhotoB64){showToast('1枚目の写真を選んでください','error');return;}
+  var d=document.getElementById('diagResult');
+  var btn=document.querySelector('#screen-photo .submit-btn');
+  d.style.display='none';
+  if(btn){btn.disabled=true;btn.innerHTML='<span style="display:inline-block;animation:ldSpin 1.5s linear infinite">📷</span> 診断中...';}
+  var selChip=document.querySelector('#photocrops .chip.selected');
+  var crop=selChip?selChip.textContent.trim():'';
+  var symptomEl=document.querySelector('#screen-photo textarea:last-of-type');
+  var symptom=symptomEl?symptomEl.value.trim():'';
+  var payload={imageBase64:selectedPhotoB64,mimeType:selectedPhotoType,crop:crop,symptom:symptom};
+  if(selectedPhotoB64_2){payload.imageBase64_2=selectedPhotoB64_2;payload.mimeType2=selectedPhotoType2;}
+  gasPost('diagnosePhoto',payload)
+    .then(function(r){
+      if(btn){btn.disabled=false;btn.textContent='🤖 Geminiに相談する';}
+      if(r&&r.success&&r.result){updateDiagResult(r.result);}
+      else{showToast('診断に失敗しました。もう一度お試しください。','error');}
+    }).catch(function(){
+      if(btn){btn.disabled=false;btn.textContent='🤖 Geminiに相談する';}
+      showToast('通信エラーが発生しました。','error');
+    });
+}
+function updateDiagResult(result){
+  var d=document.getElementById('diagResult');
+  var text=typeof result==='string'?result:(result.description||result.title||JSON.stringify(result));
+  d.innerHTML='<div class="diag-title">🔍 AI相談結果</div><div class="diag-body">'+markdownToHtml(text)+'</div>';
+  d.style.display='block';
+}
+
+// ── 履歴フィルタ ──
+function filterHist(el,cat){document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');histFilter=cat;renderHistory();}
+
+// ── カレンダー ──
+var calYear=2026,calMonth=4;
+function buildCal(){
+  var label=document.getElementById('calLabel');label.textContent=calYear+'年'+(calMonth+1)+'月';
+  var grid=document.getElementById('calDays');grid.innerHTML='';
+  var first=new Date(calYear,calMonth,1).getDay();var days=new Date(calYear,calMonth+1,0).getDate();
+  var today=new Date();
+  var calDots=records.filter(function(r){
+    var d=new Date(r.date);
+    return d.getFullYear()===calYear&&d.getMonth()===calMonth;
+  }).map(function(r){return new Date(r.date).getDate();});
+  for(var i=0;i<first;i++){var empty=document.createElement('div');grid.appendChild(empty);}
+  for(var d=1;d<=days;d++){
+    var div=document.createElement('div');div.className='cal-day';div.textContent=d;
+    var isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    if(isToday)div.classList.add('today');
+    if(calDots.includes(d))div.classList.add('has-record');
+    grid.appendChild(div);
+  }
+}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}buildCal();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}buildCal();}
+
+// ── 将来機能 ──
+function showFuture(){switchNav('future');}
+
+// ── 操作マニュアルタブ切替 ──
+function switchManualTab(tab,el){
+  ['overview','howto','other'].forEach(function(t){
+    var s=document.getElementById('manual-'+t);
+    var b=document.getElementById('mtab-'+t);
+    if(s)s.style.display=(t===tab)?'block':'none';
+    if(b)b.classList.toggle('active',t===tab);
+  });
+}
+
+// ── AI履歴読み込み ──
+function loadAILogs(){
+  var list=document.getElementById('aiLogList');
+  var ld=document.getElementById('aiLogLoading');
+  list.innerHTML='';ld.style.display='block';
+  gasGet('getAdviceLogs').then(function(r){
+    ld.style.display='none';
+    if(!r||!r.success||!r.logs||r.logs.length===0){
+      list.innerHTML='<div style="text-align:center;padding:24px;color:var(--tm);font-size:13px;">まだ履歴がありません。<br>AIアドバイスをもらうと自動保存されます。</div>';
+      return;
+    }
+    list.innerHTML=r.logs.reverse().map(function(log,i){
+      var typeLabel=log.question?'💬 相談':'🤖 アドバイス';
+      var qHtml=log.question?'<div class="ailog-q">Q: '+escHtml(log.question)+'</div>':'';
+      return '<div class="ailog-item">'
+        +'<div class="ailog-meta"><span class="ailog-date">'+escHtml(log.datetime||'')+'</span>'
+        +'<span class="ailog-type">'+typeLabel+'</span></div>'
+        +qHtml
+        +'<div class="ailog-body" id="alog-body-'+i+'">'+markdownToHtml(log.advice||'')+'</div>'
+        +'<div class="ailog-expand" onclick="toggleLogExpand('+i+')">▼ 続きを読む</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    ld.style.display='none';
+    list.innerHTML='<div style="text-align:center;padding:24px;color:#c0392b;font-size:13px;">読み込みに失敗しました。</div>';
+  });
+}
+function toggleLogExpand(i){
+  var b=document.getElementById('alog-body-'+i);
+  var e=b&&b.nextElementSibling;
+  if(!b)return;
+  if(b.classList.toggle('expanded')){if(e)e.textContent='▲ 折りたたむ';}
+  else{if(e)e.textContent='▼ 続きを読む';}
+}
+
+// アドバイス生成後に自動保存（エラーは無視）
+function saveAdviceLog(question, advice){
+  gasPost('saveAdviceLog',{question:question||'',advice:advice}).catch(function(){});
+}
+
+// ── 記録データ（GAS起動時に上書き） ──
+var records=[];
+var recordIdCnt=1,histFilter='all';
+
+function getCat(type){
+  if(type==='収穫')return 'harvest';
+  if(type==='水やり')return 'water';
+  if(type==='追肥')return 'fert';
+  return 'other';
+}
+function getTypeCls(cat){return {harvest:'ht-h',water:'ht-w',fert:'ht-f',other:'ht-o'}[cat]||'ht-o';}
+function getTypeDotColor(type){return {収穫:'var(--green)',水やり:'var(--blue)',追肥:'#7b2d8b'}[type]||'var(--tm)';}
+
+function renderHistory(){
+  var list=document.getElementById('histList');
+  var filtered=histFilter==='all'?records:records.filter(function(r){return (r.cat||getCat(r.type||r.workType||''))===histFilter;});
+  if(filtered.length===0){
+    list.innerHTML='<div style="text-align:center;padding:24px;color:var(--tm);font-size:13px;">記録がありません</div>';
+    return;
+  }
+  var tab=document.querySelector('.rec-tab.active');
+  var isCropView=tab&&tab.dataset.tab==='crop';
+  if(isCropView){
+    // 作物別ビュー：作物名昇順でグループ化
+    var groups={};
+    filtered.forEach(function(r){
+      var key=r.crop||'その他';
+      if(!groups[key])groups[key]=[];
+      groups[key].push(r);
+    });
+    var sortedKeys=Object.keys(groups).sort(function(a,b){return a.localeCompare(b,'ja');});
+    list.innerHTML=sortedKeys.map(function(key){
+      var items=groups[key];
+      var rows=items.map(function(r){
+        var val=(Number(r.qty)>0)?(r.qty+(r.unit||'')):'—';
+        var memo=r.memo?'<div class="hmemo">'+escHtml(r.memo)+'</div>':'';
+        var cat=r.cat||getCat(r.type||'');
+        return '<div class="hist-item">'
+          +'<div class="hdot" style="background:var(--gp);font-size:18px;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;flex-shrink:0;">'+(r.emoji||'🌿')+'</div>'
+          +'<div class="hinfo"><div class="htop"><div class="hname">'+(r.crop||'')+'</div><div class="hdate">'+(r.dateDisp||fmtDateShort(r.date)||'')+'</div></div>'
+          +'<span class="htype '+getTypeCls(cat)+'">'+(r.type||'')+'</span>'+memo+'</div>'
+          +'<div class="hval">'+val+'</div></div>';
+      }).join('');
+      return '<div style="margin-bottom:12px;">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--green);padding:4px 8px;background:var(--glg);border-radius:6px;margin-bottom:4px;">'+(items[0].emoji||'🌿')+' '+escHtml(key)+'</div>'
+        +rows+'</div>';
+    }).join('');
+  } else {
+    // 一覧ビュー：作物名昇順→日付降順
+    var sorted=filtered.slice().sort(function(a,b){
+      var ca=(a.crop||'').localeCompare(b.crop||'','ja');
+      if(ca!==0)return ca;
+      return (b.date||'').localeCompare(a.date||'');
+    });
+    list.innerHTML=sorted.map(function(r){
+      var val=(Number(r.qty)>0)?(r.qty+(r.unit||'')):'—';
+      var memo=r.memo?'<div class="hmemo">'+escHtml(r.memo)+'</div>':'';
+      var cat=r.cat||getCat(r.type||'');
+      return '<div class="hist-item" data-cat="'+cat+'">'
+        +'<div class="hdot" style="background:var(--gp);font-size:18px;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;flex-shrink:0;">'+(r.emoji||'🌿')+'</div>'
+        +'<div class="hinfo"><div class="htop"><div class="hname">'+(r.crop||'')+'</div><div class="hdate">'+(r.dateDisp||fmtDateShort(r.date)||'')+'</div></div>'
+        +'<span class="htype '+getTypeCls(cat)+'">'+(r.type||'')+'</span>'+memo+'</div>'
+        +'<div class="hval">'+val+'</div></div>';
+    }).join('');
+  }
+}
+
+function renderRecentRecords(){
+  var el=document.getElementById('recentList');if(!el)return;
+  var latest=records.slice(0,3);
+  if(latest.length===0){el.innerHTML='<div style="font-size:12px;color:var(--tm);text-align:center;padding:10px;">記録がありません</div>';return;}
+  el.innerHTML=latest.map(function(r){
+    var val=(Number(r.qty)>0)?(r.qty+(r.unit||'')):'—';
+    var type=r.type||'';
+    return '<div class="recent-item">'
+      +'<div class="rdot" style="background:'+getTypeDotColor(type)+'"></div>'
+      +'<div class="rinfo"><div class="rname">'+(r.emoji||'🌿')+' '+(r.crop||'')+' · '+type+'</div><div class="rdate">'+(r.dateDisp||fmtDateShort(r.date)||'')+'</div></div>'
+      +'<div class="rval">'+val+'</div></div>';
+  }).join('');
+}
+
+function renderStats(){
+  var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  var thisMonth=records.filter(function(r){var d=new Date(r.date);return d.getFullYear()===y&&d.getMonth()===m;});
+  var wc=document.getElementById('statWorkCount');if(wc)wc.textContent=thisMonth.length;
+  var hc=document.getElementById('statHarvestCnt');if(hc)hc.textContent=thisMonth.filter(function(r){return r.cat==='harvest';}).length;
+  var cc=document.getElementById('statCropCount');if(cc)cc.textContent=crops.length;
+}
+
+function renderGDD(){
+  var el=document.getElementById('gddList');if(!el)return;
+  if(crops.length===0){el.innerHTML='<div style="font-size:12px;color:var(--tm);text-align:center;padding:8px;">栽培中の作物がありません</div>';return;}
+  var dthMap={トマト:90,キュウリ:60,ナス:90,スイカ:120,大根:70,白菜:80,ピーマン:85,玉ねぎ:150,とうもろこし:90,えだまめ:80};
+  var colors=['var(--green)','var(--blue)','#7b2d8b','var(--amber)','#e11d48','#0891b2','#16a34a','#9333ea'];
+  el.innerHTML=crops.map(function(c,i){
+    var total=dthMap[c.name]||90;
+    var ds=daysSince(c.plantDate);
+    var elapsed=ds>=0?ds:0;
+    var pct=isNaN(elapsed)?0:Math.min(100,Math.round(elapsed/total*100));
+    var remaining=Math.max(0,total-elapsed);
+    var pctLabel=pct>=100?'収穫適期！':pct>=75?pct+'% — あと約'+remaining+'日':pct+'%';
+    var mb=i===crops.length-1?'margin-bottom:0':'';
+    return '<div class="gdd-wrap" style="'+mb+'">'
+      +'<div class="gdd-row"><span><b>'+(c.emoji||'🌿')+' '+cropDisplayName(c)+'</b></span><span class="gdd-pct">'+pctLabel+'</span></div>'
+      +'<div class="gdd-track"><div class="gdd-fill" style="width:'+pct+'%;background:'+colors[i%colors.length]+'"></div></div>'
+      +'</div>';
+  }).join('')+'<div style="font-size:10px;color:var(--tm);margin-top:8px;">バーが100%に近づくと収穫適期です</div>';
+}
+
+// ── 作物管理（GAS起動時に上書き） ──
+var crops=[];
+var cropIdCnt=1;
+var addCropEmoji='',addCropNameV='';
+var editingCropId=null;
+
+function daysSince(ds){
+  if(!ds)return -1;
+  var d=new Date(ds),now=new Date();
+  if(isNaN(d.getTime()))return -1;
+  now.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return Math.round((now-d)/(86400000));
+}
+function fmtDateShort(ds){
+  if(!ds)return '';
+  var p=ds.split('-');
+  if(p.length<3)return ds;
+  return (+p[1])+'月'+(+p[2])+'日';
+}
+function cropDisplayName(c){return c.tag?c.name+'('+c.tag+')':c.name;}
+
+function renderCrops(){
+  var list=document.getElementById('cropList');
+  document.getElementById('cropCount').textContent=crops.length+'種類栽培中';
+  if(crops.length===0){
+    list.innerHTML='<div style="text-align:center;padding:32px 16px;color:var(--tm);font-size:13px;"><div style="font-size:40px;margin-bottom:10px">🌱</div>栽培中の作物がありません。<br>下のボタンから追加してください。</div>';
+    return;
+  }
+  list.innerHTML=crops.map(function(c){
+    var d=daysSince(c.plantDate);
+    var dTxt=d>=0?'定植から'+d+'日':'定植予定';
+    var tagBadge=c.tag?'<span style="font-size:11px;background:var(--gp);color:var(--green);padding:2px 7px;border-radius:8px;margin-left:5px;font-weight:700;">('+c.tag+')</span>':'';
+    var memo=c.memo?'<div style="font-size:11px;color:var(--tm);margin-top:3px;">📝 '+c.memo+'</div>':'';
+    return '<div class="crop-card"><div class="crop-emoji">'+(c.emoji||'🌿')+'</div><div class="crop-info">'
+      +'<div class="crop-name">'+(c.name||'')+tagBadge+'</div>'
+      +'<div class="crop-date-row"><span>定植：'+(c.plantDate?fmtDateShort(c.plantDate):'未設定')+'</span><span class="crop-days">'+dTxt+'</span></div>'
+      +memo+'</div>'
+      +'<div class="crop-actions"><button class="crop-edit-btn" onclick="openEditDate('+c.id+')" title="情報を編集">✏️</button>'
+      +'<button class="crop-del-btn" onclick="deleteCrop('+c.id+')" title="削除">🗑️</button></div></div>';
+  }).join('');
+}
+
+function openAddModal(){
+  addCropEmoji='';addCropNameV='';
+  document.querySelectorAll('#addCropChips .chip').forEach(function(c){c.classList.remove('selected');});
+  document.getElementById('customCropWrap').style.display='none';
+  document.getElementById('customCropName').value='';
+  document.getElementById('addCropTag').value='';
+  document.getElementById('addTagPreview').textContent='';
+  document.getElementById('addCropMemo').value='';
+  document.getElementById('addPlantDate').value=toInp(new Date());
+  document.getElementById('addModal').classList.add('open');
+}
+function closeAddModal(e){
+  if(!e||e.target===document.getElementById('addModal')){
+    document.getElementById('addModal').classList.remove('open');
+  }
+}
+function renderCropChips(){
+  var cg=document.getElementById('cropGroup');
+  cg.innerHTML=crops.map(function(c){
+    var dn=cropDisplayName(c);
+    return '<div class="chip" onclick="selCrop(this,\''+dn+'\')">'+c.emoji+' '+dn+'</div>';
+  }).join('')+'<div class="chip" onclick="selCrop(this,\'その他\')">・・・ その他</div>';
+  selCropV='';selCropEmoji='🌱';
+
+  var pc=document.getElementById('photocrops');
+  pc.innerHTML=crops.map(function(c){
+    var dn=cropDisplayName(c);
+    return '<div class="chip" onclick="selPC(this)">'+c.emoji+' '+dn+'</div>';
+  }).join('')+'<div class="chip" onclick="selPC(this)">🌱 その他</div>';
+  var first=pc.querySelector('.chip');
+  if(first)first.classList.add('selected');
+}
+function updateAddTagPreview(){
+  var tag=document.getElementById('addCropTag').value.trim();
+  var base=addCropNameV==='新規'?document.getElementById('customCropName').value.trim():addCropNameV;
+  var prev=document.getElementById('addTagPreview');
+  prev.textContent=base?'表示名：'+(tag?base+'('+tag+')':base):'';
+}
+function updateEditTagPreview(){
+  var c=crops.find(function(x){return x.id===editingCropId;});if(!c)return;
+  var tag=document.getElementById('editTagInput').value.trim();
+  document.getElementById('editTagPreview').textContent='表示名：'+(tag?c.name+'('+tag+')':c.name);
+}
+function pickAddCrop(el,emoji,name){
+  document.querySelectorAll('#addCropChips .chip').forEach(function(c){c.classList.remove('selected');});
+  el.classList.add('selected');
+  addCropEmoji=emoji;addCropNameV=name;
+  document.getElementById('customCropWrap').style.display=name==='新規'?'block':'none';
+  updateAddTagPreview();
+}
+function addCrop(){
+  if(!addCropNameV){alert('作物を選んでください');return;}
+  var finalName=addCropNameV,finalEmoji=addCropEmoji;
+  if(addCropNameV==='新規'){
+    finalName=document.getElementById('customCropName').value.trim();
+    if(!finalName){alert('作物名を入力してください');return;}
+    finalEmoji='🌿';
+  }
+  var dv=document.getElementById('addPlantDate').value;
+  if(!dv){alert('定植日を入力してください');return;}
+  var tag=document.getElementById('addCropTag').value.trim();
+  var memo=document.getElementById('addCropMemo').value.trim();
+  crops.push({id:cropIdCnt++,emoji:finalEmoji,name:finalName,tag:tag,plantDate:dv,memo:memo});
+  closeAddModal();
+  renderCrops();renderCropChips();renderGDD();renderStats();
+  gasPost('saveCrop',{emoji:finalEmoji,name:finalName,tag:tag,plantDate:dv,memo:memo})
+    .then(function(r){
+      if(r&&r.success){showToast('作物を保存しました','success');}
+      else{showToast('作物の保存に失敗しました','error');}
+    }).catch(function(){showToast('通信エラーが発生しました','error');});
+}
+function deleteCrop(id){
+  var c=crops.find(function(x){return x.id===id;});
+  if(!c)return;
+  if(!confirm(cropDisplayName(c)+' を削除しますか？\n（「栽培終了」として記録されます）'))return;
+  crops=crops.filter(function(x){return x.id!==id;});
+  renderCrops();renderCropChips();renderGDD();renderStats();
+  // 物理削除せず栽培終了フラグ（CLAUDE.md設計方針）
+  gasPost('endCrop',{id:id}).catch(function(){});
+}
+function openEditDate(id){
+  var c=crops.find(function(x){return x.id===id;});
+  if(!c)return;
+  editingCropId=id;
+  document.getElementById('editDateTitle').textContent=c.emoji+' '+cropDisplayName(c)+' を編集';
+  document.getElementById('editTagInput').value=c.tag||'';
+  document.getElementById('editTagPreview').textContent='表示名：'+cropDisplayName(c);
+  document.getElementById('editDateInput').value=c.plantDate;
+  document.getElementById('editMemoInput').value=c.memo||'';
+  document.getElementById('editDateModal').classList.add('open');
+}
+function closeEditModal(e){
+  if(!e||e.target===document.getElementById('editDateModal')){
+    document.getElementById('editDateModal').classList.remove('open');
+    editingCropId=null;
+  }
+}
+function saveEditDate(){
+  var c=crops.find(function(x){return x.id===editingCropId;});
+  if(!c)return;
+  var dv=document.getElementById('editDateInput').value;
+  if(!dv){alert('定植日を入力してください');return;}
+  c.tag=document.getElementById('editTagInput').value.trim();
+  c.plantDate=dv;
+  c.memo=document.getElementById('editMemoInput').value.trim();
+  closeEditModal();
+  renderCrops();renderCropChips();renderGDD();
+  gasPost('updateCrop',{id:c.id,tag:c.tag,plantDate:c.plantDate,memo:c.memo})
+    .then(function(r){
+      if(r&&r.success){showToast('更新しました','success');}
+      else{showToast('更新に失敗しました','error');}
+    }).catch(function(){showToast('通信エラーが発生しました','error');});
+}
+
+// ── 作物別ビュー ──
+var histView='list';
+function switchHistView(view){
+  histView=view;
+  document.getElementById('vt-list').classList.toggle('active',view==='list');
+  document.getElementById('vt-crops').classList.toggle('active',view==='crops');
+  document.getElementById('histListControls').style.display=view==='list'?'block':'none';
+  document.getElementById('histCropView').style.display=view==='crops'?'block':'none';
+  if(view==='crops')renderHistCropView();
+}
+function renderHistCropView(){
+  var el=document.getElementById('histCropView');if(!el)return;
+  if(records.length===0){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--tm);font-size:13px;">記録がありません</div>';
+    return;
+  }
+  var groups={};var order=[];
+  records.forEach(function(r){
+    var key=r.crop;
+    if(!groups[key]){groups[key]={emoji:r.emoji,records:[]};order.push(key);}
+    groups[key].records.push(r);
+  });
+  el.innerHTML=order.map(function(key,idx){
+    var g=groups[key];
+    var count=g.records.length;
+    var harvestCnt=g.records.filter(function(r){return r.cat==='harvest';}).length;
+    var lastDate=g.records[0].dateDisp;
+    var meta=count+'件';
+    if(harvestCnt>0)meta+=' · 収穫'+harvestCnt+'回';
+    meta+=' · 最終: '+lastDate;
+    return '<div class="cg-card">'
+      +'<div class="cg-header" onclick="toggleCropGroup('+idx+')">'
+      +'<div class="cg-emoji">'+(g.emoji||'🌿')+'</div>'
+      +'<div class="cg-info"><div class="cg-name">'+(key||'')+'</div><div class="cg-meta">'+meta+'</div></div>'
+      +'<div class="cg-arrow" id="cga-'+idx+'">›</div>'
+      +'</div>'
+      +'<div class="cg-body" id="cgb-'+idx+'">'
+      +g.records.map(function(r){
+        var val=(Number(r.qty)>0)?(r.qty+(r.unit||'')):'—';
+        var cat=r.cat||getCat(r.type||'');
+        var memo=r.memo?'<div class="cg-memo">📝 '+escHtml(r.memo)+'</div>':'';
+        return '<div class="cg-row">'
+          +'<div class="cg-date">'+(r.dateDisp||fmtDateShort(r.date)||'')+'</div>'
+          +'<div class="cg-type-wrap"><span class="htype '+getTypeCls(cat)+'">'+(r.type||'')+'</span>'+memo+'</div>'
+          +'<div class="cg-val">'+val+'</div>'
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+}
+function toggleCropGroup(idx){
+  var body=document.getElementById('cgb-'+idx);
+  var arrow=document.getElementById('cga-'+idx);
+  if(!body||!arrow)return;
+  var open=body.classList.toggle('open');
+  arrow.classList.toggle('open',open);
+}
+
+// ── 気象表示更新 ──
+function updateWeatherUI(data){
+  if(!data)return;
+  // 今日の天気テキスト（挨拶の下）
+  if(data.today){
+    var gt=document.getElementById('greetingWeather');
+    if(gt){
+      var desc=data.today.label||data.today.description||'';
+      var tmax=(data.today.tempMax!=null?data.today.tempMax:data.today.temp_max);
+      var tmaxTxt=tmax!=null?tmax+'℃':'';
+      var txt='';
+      if(desc&&tmaxTxt)txt=desc+'、最高'+tmaxTxt+'。';
+      else if(desc)txt=desc;
+      gt.innerHTML=txt;
+    }
+  }
+  // アラート表示（level: 'red'/'orange'/'blue'）
+  var banner=document.getElementById('alertBanner');
+  var alertCard=document.getElementById('alertCard');
+  var alerts=data.alerts||[];
+  if(alerts.length>0){
+    var a=alerts[0];
+    var level=a.level||'orange';
+    var bannerCls='alert-banner'+(level==='red'?'':level==='blue'?' info':' warn');
+    if(banner){
+      banner.textContent=(a.message||'')+' ✕';
+      banner.className=bannerCls;
+      banner.onclick=function(){banner.classList.add('hide');};
+    }
+    if(alertCard){
+      var cardCls=level==='red'?'ac-pest':level==='blue'?'ac-frost':'ac-heat';
+      var icon=level==='red'?'🚨':level==='blue'?'❄️':'⚠️';
+      alertCard.className='alert-card '+cardCls;
+      alertCard.style.display='flex';
+      var iconEl=document.getElementById('alertCardIcon');
+      var titleEl=document.getElementById('alertCardTitle');
+      var bodyEl=document.getElementById('alertCardBody');
+      if(iconEl)iconEl.textContent=icon;
+      if(titleEl)titleEl.textContent=a.title||a.message||'';
+      if(bodyEl)bodyEl.textContent=a.detail||'';
+    }
+  }else{
+    if(banner)banner.classList.add('hide');
+    if(alertCard)alertCard.style.display='none';
+  }
+  // 天気予報はbuildStaticWeather()内のfetchHybridWeatherが処理するため、
+  // GASからのdaily天気データはアラート処理のみに使用
+}
+
+
+// ── GAS初期化 ──
+function initFromGAS(){
+  var overlay=document.getElementById('initOverlay');
+  console.log('[GAS] 初期化開始 URL:',GAS_URL);
+  Promise.all([
+    gasGet('getCrops').catch(function(e){console.warn('[GAS] getCrops失敗:',e.message);return null;}),
+    gasGet('getRecords').catch(function(e){console.warn('[GAS] getRecords失敗:',e.message);return null;}),
+    gasGet('getWeather').catch(function(e){console.warn('[GAS] getWeather失敗:',e.message);return null;})
+  ]).then(function(results){
+    var cropsRes=results[0],recordsRes=results[1],weatherRes=results[2];
+    console.log('[GAS] getCrops応答:',cropsRes);
+    console.log('[GAS] getRecords応答:',recordsRes);
+    console.log('[GAS] getWeather応答:',weatherRes);
+    var loaded=false;
+    if(cropsRes&&cropsRes.success&&Array.isArray(cropsRes.crops)){
+      crops=cropsRes.crops.map(function(c,i){
+        return {
+          id:     Number(c.id)||(i+1),
+          emoji:  c.emoji||'🌿',
+          name:   c.name||'作物',
+          tag:    c.tag!=null?String(c.tag):'',
+          plantDate: c.plantDate||'',
+          memo:   c.memo||''
+        };
+      });
+      cropIdCnt=crops.reduce(function(m,c){return Math.max(m,c.id);},0)+1;
+      loaded=true;
+    }
+    if(recordsRes&&recordsRes.success&&Array.isArray(recordsRes.records)){
+      records=recordsRes.records.map(function(r,i){
+        var date=r.date||'';
+        var type=r.type||r.workType||'';
+        var qty=Number(r.qty||r.quantity)||0;  // GASフィールド名 quantity に対応
+        return {
+          id:       Number(r.id)||(i+1),
+          date:     date,
+          dateDisp: r.dateDisp||fmtDateShort(date),
+          crop:     r.crop||'',
+          emoji:    r.emoji||'🌿',
+          type:     type,
+          cat:      r.cat||getCat(type),
+          qty:      qty,
+          unit:     r.unit||'',
+          memo:     r.memo||'',
+          harvestQty: Number(r.harvestQty||r.harvest_qty)||0
+        };
+      });
+      recordIdCnt=records.reduce(function(m,r){return Math.max(m,r.id);},0)+1;
+      loaded=true;
+    }
+    if(weatherRes&&weatherRes.success){updateWeatherUI(weatherRes);}
+    if(loaded){
+      var proto=document.querySelector('.proto');
+      if(proto)proto.style.display='none';
+    }else{
+      showToast('データ読み込みに失敗。サンプル表示しています。','error');
+      if(crops.length===0){
+        crops=[
+          {id:1,emoji:'🍅',name:'トマト',tag:'',plantDate:'2026-04-05',memo:''},
+          {id:2,emoji:'🥒',name:'キュウリ',tag:'',plantDate:'2026-04-10',memo:''},
+          {id:3,emoji:'🍆',name:'ナス',tag:'',plantDate:'2026-04-15',memo:''},
+          {id:4,emoji:'🍉',name:'スイカ',tag:'',plantDate:'2026-04-20',memo:''}
+        ];cropIdCnt=5;
+      }
+      if(records.length===0){
+        records=[
+          {id:1,date:'2026-05-15',dateDisp:'5月15日',crop:'トマト',emoji:'🍅',type:'収穫',cat:'harvest',qty:3,unit:'個',memo:'色づきよい'},
+          {id:2,date:'2026-05-14',dateDisp:'5月14日',crop:'キュウリ',emoji:'🥒',type:'水やり',cat:'water',qty:0,unit:'',memo:''},
+          {id:3,date:'2026-05-12',dateDisp:'5月12日',crop:'ナス',emoji:'🍆',type:'追肥',cat:'fert',qty:0,unit:'',memo:'液体肥料500ml'}
+        ];recordIdCnt=4;
+      }
+    }
+    renderCrops();renderCropChips();
+    renderHistory();renderRecentRecords();
+    renderGDD();renderStats();buildCal();
+  }).catch(function(e){
+    console.error('[GAS] 予期しないエラー:',e);
+  }).finally(function(){
+    if(overlay)overlay.classList.add('hide');
+  });
+}
+
+// ── 初期化 ──
+window.addEventListener('DOMContentLoaded',function(){
+  setToday();
+  var now=new Date();
+  var dow=['日','月','火','水','木','金','土'][now.getDay()];
+
+  // ① 挨拶（時間帯別）
+  var grEl=document.getElementById('greetingText');
+  if(grEl)grEl.textContent=getGreeting();
+
+  // ② ヘッダー日付・天気タイトルに LOCATION_NAME を反映
+  document.getElementById('headerDate').textContent=
+    LOCATION_NAME+' · '+now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+dow+'）';
+  var wxT=document.getElementById('wxCardTitle');
+  if(wxT)wxT.textContent='今週の天気（'+LOCATION_NAME+'）';
+
+  // ② 正確な曜日で天気stripを初期表示
+  buildStaticWeather();
+
+  document.getElementById('addCropTag').addEventListener('input',updateAddTagPreview);
+  document.getElementById('customCropName').addEventListener('input',updateAddTagPreview);
+  document.getElementById('editTagInput').addEventListener('input',updateEditTagPreview);
+  initFromGAS();
+});
+</script>
+</body>
+</html>
